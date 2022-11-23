@@ -6,6 +6,7 @@
 #include <string>
 #include <initializer_list>
 #include <array>
+#include <vector>
 #include <cassert>
 
 #include <Windows.h>
@@ -30,11 +31,11 @@ class Process
 
     // 读内存
     template <typename T>
-    T ReadMemory(std::initializer_list<uintptr_t>);
+    T ReadMemory(std::vector<uintptr_t>);
 
     // 读内存字符串
     template <>
-    std::string ReadMemory<std::string>(std::initializer_list<uintptr_t>);
+    std::string ReadMemory<std::string>(std::vector<uintptr_t>);
 
     // 写内存
     template <typename T>
@@ -42,19 +43,19 @@ class Process
 
     // 读内存数组
     template <typename T, size_t size>
-    std::array<T, size> ReadMemory(std::initializer_list<uintptr_t>);
+    std::array<T, size> ReadMemory(std::vector<uintptr_t>);
 
     // 写内存数组
     template <typename T, size_t size>
     void WriteMemory(std::array<T, size>, std::initializer_list<uintptr_t>);
 
-  protected:
+  public:
     HWND hwnd;     // 窗口句柄
     DWORD pid;     // 进程标识
     HANDLE handle; // 进程句柄
 
 #if (defined _DEBUG) && (defined _PTK_MEMORY_OUTPUT)
-  private:
+  protected:
     std::string int_to_hex_string(unsigned int num)
     {
         std::stringstream sstream;
@@ -63,7 +64,7 @@ class Process
     }
 
     // [[[0x6a9ec0] +0x768] +0x5560]
-    std::string addr_list_to_string(std::initializer_list<uintptr_t> addr_list)
+    std::string addr_list_to_string(std::vector<uintptr_t> addr_list)
     {
         std::string str;
         for (auto it = addr_list.begin(); it != addr_list.end(); it++)
@@ -77,7 +78,7 @@ class Process
 };
 
 template <typename T>
-T Process::ReadMemory(std::initializer_list<uintptr_t> addr)
+T Process::ReadMemory(std::vector<uintptr_t> addr)
 {
     T result = T();
 
@@ -111,7 +112,7 @@ T Process::ReadMemory(std::initializer_list<uintptr_t> addr)
 }
 
 template <>
-inline std::string Process::ReadMemory<std::string>(std::initializer_list<uintptr_t> addr)
+inline std::string Process::ReadMemory<std::string>(std::vector<uintptr_t> addr)
 {
     std::string result = std::string();
 
@@ -123,14 +124,14 @@ inline std::string Process::ReadMemory<std::string>(std::initializer_list<uintpt
     {
         if (it != addr.end() - 1)
         {
-            unsigned long read_size = 0;
+            SIZE_T read_size = 0;
             int ret = ReadProcessMemory(this->handle, (const void *)(offset + *it), &offset, sizeof(offset), &read_size);
             if (ret == 0 || sizeof(offset) != read_size)
                 return std::string();
         }
         else
         {
-            unsigned long read_size = 0;
+            SIZE_T read_size = 0;
             int ret = 0;
             char ch = 0;
 
@@ -185,7 +186,7 @@ void Process::WriteMemory(T value, std::initializer_list<uintptr_t> addr)
 }
 
 template <typename T, size_t size>
-std::array<T, size> Process::ReadMemory(std::initializer_list<uintptr_t> addr)
+std::array<T, size> Process::ReadMemory(std::vector<uintptr_t> addr)
 {
     std::array<T, size> result = {T()};
 

@@ -133,6 +133,7 @@ class Window : public Fl_Double_Window
     Fl_Value_Input *input_level;
     Fl_Button *button_level;
     Fl_Button *button_unlock;
+    Fl_Button *button_script;
     Fl_Button *button_direct_win;
 
     Fl_Group *group_battle;

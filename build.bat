@@ -2,7 +2,7 @@
 @echo off
 chcp 65001
 
-call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvarsall.bat" x86
+call "C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Auxiliary\Build\vcvarsall.bat" x86
 
 REM cd /d D:\repo\pvztoolkit
 cd /d %~dp0
@@ -12,6 +12,9 @@ set LIB=.\fltk\lib;%LIB%
 
 set INCLUDE=.\zlib\include;%INCLUDE%
 set LIB=.\zlib\lib;%LIB%
+
+set INCLUDE=.\lua\include;%INCLUDE%
+set LIB=.\lua\lib;%LIB%
 
 if exist .\out\pvztoolkitd.exe del .\out\pvztoolkitd.exe
 if exist .\out\pvztoolkit.exe nmake -f makefile.release clean
@@ -24,12 +27,6 @@ mt.exe -nologo ^
 -manifest ".\res\ptk.manifest" ^
 -outputresource:".\out\pvztoolkitd.exe;#1"
 
-signtool.exe sign /v ^
-/fd sha1 ^
-/f "D:\notes\cert\lmintlcx_r4.pfx" ^
-/p "Rm9yIFppb24h" ^
-.\out\pvztoolkitd.exe
-
 goto :end rem release
 
 nmake -f makefile.release clean
@@ -40,20 +37,6 @@ if not exist .\out\pvztoolkit.exe goto :end
 mt.exe -nologo ^
 -manifest ".\res\ptk.manifest" ^
 -outputresource:".\out\pvztoolkit.exe;#1"
-
-signtool.exe sign /v ^
-/fd sha1 ^
-/f "D:\notes\cert\lmintlcx_r4.pfx" ^
-/p "Rm9yIFppb24h" ^
-/t "http://timestamp.digicert.com" ^
-.\out\pvztoolkit.exe
-
-signtool.exe sign /v ^
-/as /fd sha256 ^
-/f "D:\notes\cert\lmintlcx_r4.pfx" ^
-/p "Rm9yIFppb24h" ^
-/tr "http://timestamp.digicert.com" ^
-.\out\pvztoolkit.exe
 
 goto :end
 

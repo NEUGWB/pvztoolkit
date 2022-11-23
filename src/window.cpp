@@ -707,7 +707,8 @@ Window::Window(int width, int height, const char *title)
                 button_mix = new Fl_Button(c(4) + 15, r(5), iw - 15, ih, "混乱关卡");
                 input_level = new Fl_Value_Input(c(3) + 20, r(6), iw - 20 + 15, ih, "");
                 button_level = new Fl_Button(c(4) + 15, r(6), iw - 15, ih, "无尽轮数");
-                button_unlock = new Fl_Button(c(1), r(6), iw + 12, ih, "通关存档");
+                button_unlock = new Fl_Button(c(1), r(6), 30, ih, "通关存档");
+                button_script = new Fl_Button(c(1) + 45, r(6), iw - 15, ih, "运行脚本");
                 button_direct_win = new Fl_Button(c(2) + 20 + 15, r(6), iw - 15, ih, "直接过关");
             }
             group_resource->end();
@@ -1187,7 +1188,8 @@ Window::Window(int width, int height, const char *title)
         button_capture->copy_label("📷");
     }
 
-    button_unlock->copy_label(EMOJI("🏆", "通关存档"));
+    button_unlock->copy_label(EMOJI("🏆", ""));
+    button_script->copy_label("运行脚本");
 
     button_lawn_mower->replace(0, EMOJI("➡️", "[启动]"));
     button_lawn_mower->replace(1, EMOJI("🆑", "[删除]"));

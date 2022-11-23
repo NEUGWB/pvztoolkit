@@ -21,6 +21,7 @@ INCS = .\src\pak.h \
        .\src\lineup.h \
        .\src\pvz.h \
        .\src\window.h \
+       .\src\script.h \
        .\src\toolkit.h
 CXXFLAGS = /Fo"$(OUTDIR)\\" /Fd"$(OUTDIR)\$(TARGET).pdb" $(CXXFLAGS_BARE) $(DEFINES) $(INCPATH)
 
@@ -28,11 +29,12 @@ RC = rc
 RC_FLAGS = /n $(DEFINES)
 
 LINKER = link
+LIBS_LUA = lua54d.lib
 LIBS_FLTK = fltk.lib fltk_z.lib fltk_images.lib fltk_jpeg.lib fltk_png.lib
 LIBS_ZLIB = zlib.lib
 LIBS_WIN32 = user32.lib shell32.lib advapi32.lib comctl32.lib comdlg32.lib ole32.lib \
              psapi.lib version.lib wsock32.lib crypt32.lib gdi32.lib gdiplus.lib wintrust.lib
-LIBS = /LIBPATH:$(OUTDIR) $(LIBS_FLTK) $(LIBS_ZLIB) $(LIBS_WIN32)
+LIBS = /LIBPATH:$(OUTDIR) $(LIBS_FLTK) $(LIBS_ZLIB) $(LIBS_WIN32) $(LIBS_LUA)
 OBJS = $(OUTDIR)\pak.obj \
        $(OUTDIR)\process.obj \
        $(OUTDIR)\code.obj \
@@ -41,6 +43,7 @@ OBJS = $(OUTDIR)\pak.obj \
        $(OUTDIR)\pvz.obj \
        $(OUTDIR)\window.obj \
        $(OUTDIR)\toolkit.obj \
+       $(OUTDIR)\script.obj \
        $(OUTDIR)\main.obj
 RES = $(OUTDIR)\version.res
 LFLAGS = /NOLOGO /DYNAMICBASE /NXCOMPAT /INCREMENTAL:NO /SUBSYSTEM:CONSOLE \
@@ -81,6 +84,9 @@ $(OUTDIR)\window.obj: .\src\window.cpp $(INCS)
 
 $(OUTDIR)\toolkit.obj: .\src\toolkit.cpp $(INCS)
     $(CXX) $(CXXFLAGS) /Fe"$(OUTDIR)\toolkit.obj" .\src\toolkit.cpp
+
+$(OUTDIR)\script.obj: .\src\script.cpp $(INCS)
+    $(CXX) $(CXXFLAGS) /Fe"$(OUTDIR)\script.obj" .\src\script.cpp
 
 $(OUTDIR)\main.obj: .\src\main.cpp $(INCS)
     $(CXX) $(CXXFLAGS) /Fe"$(OUTDIR)\main.obj" .\src\main.cpp

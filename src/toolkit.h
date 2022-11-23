@@ -97,6 +97,9 @@ class Toolkit : public Window
     static void cb_unlock(Fl_Widget *, void *);
     inline void cb_unlock();
 
+    static void cb_script(Fl_Widget *, void *);
+    inline void cb_script();
+
     static void cb_direct_win(Fl_Widget *, void *);
     inline void cb_direct_win();
     static DWORD WINAPI cb_direct_win_thread(void *);

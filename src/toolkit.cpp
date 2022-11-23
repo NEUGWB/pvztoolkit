@@ -1,5 +1,6 @@
 
 #include "toolkit.h"
+#include "script.h"
 
 namespace Pt
 {
@@ -25,7 +26,7 @@ Toolkit::Toolkit(int width, int height, const char *title)
 
     // 工作类
 
-    pvz = new PvZ();
+    pvz = new Script();
     pvz->callback(cb_find_result, this);
     // pvz->FindPvZ(); // 在 main() 里调用
 
@@ -55,6 +56,7 @@ Toolkit::Toolkit(int width, int height, const char *title)
     button_level->callback(cb_endless_rounds, this);
 
     button_unlock->callback(cb_unlock, this);
+    button_script->callback(cb_script, this);
     button_direct_win->callback(cb_direct_win, this);
 
     button_put_plant->callback(cb_put_plant, this);
@@ -523,6 +525,52 @@ void Toolkit::cb_unlock(Fl_Widget *, void *w)
 void Toolkit::cb_unlock()
 {
     pvz->UnlockTrophy();
+}
+
+void Toolkit::cb_script(Fl_Widget *, void *w)
+{
+    ((Toolkit *)w)->cb_script();
+}
+
+void Toolkit::cb_script()
+{
+    CHAR szFileName[MAX_PATH] = {0};
+
+    OPENFILENAMEA ofn;
+    ZeroMemory(&ofn, sizeof(ofn));
+    ofn.lStructSize = sizeof(ofn);
+    ofn.hwndOwner = nullptr;
+    // hInstance
+    ofn.lpstrFilter = "Lua (*.lua)\0*.lua\0";
+    // lpstrCustomFilter
+    // nMaxCustFilter
+    ofn.nFilterIndex = 1;
+    ofn.lpstrFile = szFileName;
+    ofn.lpstrFile[0] = '\0';
+    ofn.nMaxFile = sizeof(szFileName);
+    ofn.lpstrFileTitle = nullptr;
+    ofn.nMaxFileTitle = 0;
+    ofn.lpstrInitialDir = nullptr;
+    // lpstrTitle
+    ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST;
+    // nFileOffset
+    // nFileExtension
+    // lpstrDefExt
+    // lCustData
+    // lpfnHook
+    // lpTemplateName
+    // pvReserved
+    // dwReserved
+    // FlagsEx
+    if (GetOpenFileNameA(&ofn) == TRUE)
+    {
+        Script *script = static_cast<Script *>(pvz);
+        script->init();
+        script->run(szFileName);
+    }
+    else
+    {
+    }
 }
 
 void Toolkit::cb_direct_win(Fl_Widget *, void *w)

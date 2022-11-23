@@ -146,7 +146,7 @@ bool PvZ::FindPvZ()
 
 #ifdef _DEBUG
     if (supported)
-        WriteMemory<bool>(true, {data().lawn, data().tod_mode});
+        //WriteMemory<bool>(true, {data().lawn, data().tod_mode});
 #endif
 
     if (cb_find_result != nullptr && this->window != nullptr)
