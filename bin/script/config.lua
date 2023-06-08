@@ -46,9 +46,197 @@ end
 addr.zombie_type = 0x24
 addr.zombie_x = 0x2c
 addr.zombie_y = 0x30
+addr.zombie_hp = 0xc8
+addr.zombie_row = 0x1c
+addr.zombie_slow_cd = 0xac
+addr.zombie_freeze_cd = 0xb4
+addr.zombie_exist_time = 0x60
+addr.zombie_wave = 0x6c
 
 addr.plant_status = 0x3c
+addr.plant_status_count_down = 0x54
 addr.plant_hp = 0x40
+
+local _meta_pvz_struct
+local function LuaPvzStruct(ptr, meta)
+    local struct = {_ptr = ptr, 
+        _memory = rawget(meta, "_memory"), 
+        _size = rawget(meta, "_size"), 
+        _method = rawget(meta, "_method")
+    }
+
+    setmetatable(struct, _meta_pvz_struct)
+    --print("LuaPvzStruct", struct, struct.ptr)
+    return struct
+end
+
+_meta_pvz_struct = 
+{
+    __index = function(t, k)
+        --print("_meta_pvz_struct", t, k)
+        local _method = rawget(t, "_method")
+        if _method and _method[k] then
+            return _method[k]
+        end
+
+        local _memory = rawget(t, "_memory")
+        local _ptr = rawget(t, "_ptr")
+        if not _memory or not _ptr then
+            print("__index not valid lua pvz struct", t, _memory, _ptr)
+            pvz.Error("")
+        end
+
+        local mem = _memory[k]
+        if not mem then
+            print("__index not valid key", t, k)
+            pvz.Error("")
+        end
+        local data = pvz.ReadMemory(mem[1], {_ptr + mem[2]})
+        --print("read meta memory", mem[1], _ptr, mem[2], k)
+        if (mem.meta) then
+            return LuaPvzStruct(data, mem.meta)
+        end
+        return data
+    end,
+
+    __add = function(t, n)
+        if n == 0 then
+            return t
+        end
+        local _size = rawget(t, "_size")
+        local _ptr = rawget(t, "_ptr")
+        if not _size or not _ptr then
+            print("__add not valid lua pvz struct", t, _size, _ptr)
+            pvz.Error()
+        end
+        local ptr = _ptr + n * _size
+        return LuaPvzStruct(ptr, t)
+    end,
+
+    --[[__newindex = function(t, k, v)
+        print("__newindex", t, k, v)
+        local _memory = rawget(t, "_memory")
+        local _ptr = rawget(t, "_ptr")
+        if not _memory or not _ptr then
+            print("__newindex not valid lua pvz struct", t, _memory, _ptr)
+        end
+
+        local mem = _memory[k]
+        if not mem then
+            print("__newindex not valid key", t, k)
+        end
+        PvzStruct_Write(_ptr, mem[1], mem[2], v)
+    end]]
+}
+
+local _meta_seed = {
+    _memory = 
+    {
+        IsUsable = {"bool", 0x48 + 0x28},
+        Cd = {"int32_t", 0x24 + 0x28},
+        InitialCd = {"int32_t", 0x28 + 0x28},
+        ImitaterType = {"int32_t", 0x38 + 0x28},
+        Type = {"int32_t", 0x34 + 0x28},
+    },
+    _size = 0x50,
+}
+
+pvz.SeedHead = function()
+    local ptr = pvz.ReadMemory("uint32_t", {pvz_base, main_object, addr.slot})
+    return LuaPvzStruct(ptr, _meta_seed)
+end
+
+local _meta_plant = {
+    _memory = 
+    {
+        Row = {"int32_t", addr.plant_row},
+        Col = {"int32_t", addr.plant_col},
+        Type = {"int32_t", addr.plant_type},
+        Status = {"int32_t", addr.plant_status},
+        StatusCountDown = {"int32_t", addr.plant_status_count_down},
+        Hp = {"int32_t", addr.plant_hp},
+        --StateCountdown = {"int32_t", addr.plant_hp},
+
+        Dead = {"bool", addr.plant_dead},
+        Squished = {"bool", addr.plant_squished},
+        --Sleeping = {"bool", addr.plant_asleep},
+    },
+    _method = 
+    {
+        Alive = function(v) return not v.Dead and not v.Squished end,
+    },
+    _size = addr.plant_struct_size,
+}
+
+pvz.PlantHead = function()
+    local ptr = pvz.ReadMemory("uint32_t", {pvz_base, main_object, addr.plant})
+    return LuaPvzStruct(ptr, _meta_plant)
+end
+
+local _meta_zombie = {
+    _memory = 
+    {
+        X = {"int32_t", addr.zombie_x},
+        Y = {"int32_t", addr.zombie_y},
+        Row = {"int32_t", addr.zombie_row},
+        Type = {"int32_t", addr.zombie_type},
+        Status = {"int32_t", addr.zombie_status},
+        Hp = {"int32_t", addr.zombie_hp},
+
+        SlowCd = {"int32_t", addr.zombie_slow_cd},
+        FreezeCd = {"int32_t", addr.zombie_freeze_cd},
+        ExistTime = {"int32_t", addr.zombie_exist_time},
+        Wave = {"int32_t", addr.zombie_wave},
+
+        Dead = {"bool", addr.zombie_dead},
+    },
+    _method = 
+    {
+        Alive = function(z)
+            local st = z.Status
+            local dead = z.Dead
+            return not dead and st ~= 1 and st ~= 2 and st ~= 3
+        end
+    },
+    _size = addr.zombie_struct_size,
+}
+
+pvz.ZombieHead = function()
+    local ptr = pvz.ReadMemory("uint32_t", {pvz_base, main_object, addr.zombie})
+    return LuaPvzStruct(ptr, _meta_zombie)
+end
+
+local function ObjectIter(array, max, pred)
+    local index = 0
+    return function()
+        while index < max do
+            local r = array + index
+            local i = index
+            index = index + 1
+            if not pred or pred(r) then
+                return r, i
+            end
+        end
+    end
+end
+
+pvz.AliveZombies = function()
+    local zombies = pvz.ZombieHead()
+    local max = pvz.ReadMemory("int32_t", {pvz_base, main_object, addr.zombie_count_max})
+    local alive = function(z) 
+        return z:Alive()
+    end
+    return ObjectIter(zombies, max, alive)
+end
+
+pvz.AlivePlants = function()
+    local plants = pvz.PlantHead()
+    local max = pvz.ReadMemory("int32_t", {pvz_base, main_object, addr.plant_count_max})
+    local alive = function(p)
+        return not p.Squished and not p.Dead
+    end
+    return ObjectIter(plants, max, alive)
+end
 
 local function MakeLong(x, y)
     return (x & 0xffff) | ((y & 0xffff) << 16)
@@ -85,29 +273,49 @@ pvz.SafeClick = function ()
     pvz.RClick(60, 50)
 end
 
+local GlobalDelay = function(t)
+    local start = pvz.globalClock
+    while (pvz.globalClock - start < t) do
+        coroutine.yield()
+    end
+end
+
 pvz.SlowClick = function(x, y)
-    pvz.SystemSleep(10)
     pvz.PostMessage(WIN_ENUM.WM_LBUTTONDOWN, 0, MakeLongWithDpi(x, y))
-    pvz.SystemSleep(10)
+    GlobalDelay(2)
     pvz.PostMessage(WIN_ENUM.WM_LBUTTONUP, 0, MakeLongWithDpi(x, y))
-    pvz.SystemSleep(10)
 end
 
 pvz.ButtonClick = function(x, y)
     local function _do()
         pvz.PostMessage(WIN_ENUM.WM_LBUTTONDOWN, 0, MakeLongWithDpi(x, y))
-        pvz.PostMessage(WIN_ENUM.WM_RBUTTONDOWN, 0, MakeLongWithDpi(x, y))
+        GlobalDelay(2)
         pvz.PostMessage(WIN_ENUM.WM_LBUTTONUP, 0, MakeLongWithDpi(x, y))
-        pvz.PostMessage(WIN_ENUM.WM_RBUTTONUP, 0, MakeLongWithDpi(x, y))
     end
     _do()
-    pvz.SystemSleep(10)
+    GlobalDelay(3)
     _do()
 end
 
+pvz.GridToXY = function(r, c)
+    local x = 80 * c
+    local y = 0
+    if pvz.scene == 2 or pvz.scene == 3 then
+        y = 55 + 85 * r
+    elseif pvz.scene == 4 or pvz.scene == 5 then
+        if c >= 6 then
+            y = 45 + 85 * r
+        else
+            y = 45 + 85 * r + 20 * (6 - c)
+        end
+    else
+        y = 40 + 100 * r
+    end
+    return math.floor(x), math.floor(y)
+end
+
 pvz.ClickFeild = function (r, c)
-    local x = math.floor(80 * c + 0.5)
-    local y = math.floor(30 + 85 * r + 0.5)
+    local x, y = pvz.GridToXY(r, c)
     pvz.Click(x, y);
 end
 
@@ -119,10 +327,11 @@ local type_size = {
     bool = 1,
 }
 pvz.ReadMemory = function(t, a)
+    --print("read memory", t, a, debug.traceback())
     local ret = pvz.ReadProcessMemory(t, a)
     if ret == nil then
         print(debug.traceback())
-        error("read memory error")
+        pvz.Error("read memory error")
     end
     return ret
 end
@@ -193,44 +402,31 @@ pvz.FrameDuration = function ()
 end
 
 local TaskList = {}
-pvz.RunOneLevel = function()
-    local gameTime = 0
-    local lastUpdate = os.clock()
-    local maxUpdate = 0.5 / pvz.Speed()
-    if maxUpdate < 0.2 then maxUpdate = 0.2 end
-    while true do
-        local curTime = pvz.GameClock()
-        if curTime ~= gameTime then
-            gameTime = curTime
-            pvz.gameTime = gameTime
-            for k, v in pairs(TaskList) do
-                local s, m = coroutine.resume(v)
-                if not s then
-                    print(s, m, k)
-                    --table.remove(TaskList, k)
-                    TaskList[k] = nil
-                end
-                if coroutine.status(v) == "dead" then
-                    
-                end
-            end
-            lastUpdate = os.clock()
-        end
-        pvz.SystemSleep(1)
-        if os.clock() - lastUpdate > maxUpdate then
-            print("level end", maxUpdate, os.clock(), lastUpdate)
-            break
-        end
-    end
-    
-    local wait = 5300 / pvz.Speed()
-    if wait < 800 then wait = 800 end
-    pvz.SystemSleep(wait)
-    print("wait end", wait)
-end
-
 local function AddTask(f, tag)
     local task = coroutine.create(f)
+    if tag then
+        if TaskList[tag] then
+            print("add duplicate task", tag, debug.traceback())
+            pvz.Error()
+        end
+        TaskList[tag] = task
+    else
+        table.insert(TaskList, task)
+    end
+end
+
+local function RunTask(f, tag)
+    local task = coroutine.create(f)
+    local s, m = coroutine.resume(task)
+    if not s then
+        print(s, m, debug.traceback(task))
+        pvz.Error()
+        return
+    end
+    if coroutine.status(task) == "dead" then
+        return
+    end
+
     if tag then
         TaskList[tag] = task
     else
@@ -238,11 +434,15 @@ local function AddTask(f, tag)
     end
 end
 
-pvz.AddTask = AddTask
+pvz.NewTask = function(f, tag)
+    return function()
+        RunTask(f, tag)
+    end
+end
 
 pvz.Delay = function(t)
-    local start = pvz.gameTime
-    while (pvz.gameTime - start < t) do
+    local start = pvz.gameClock
+    while (pvz.gameClock - start < t) do
         coroutine.yield()
     end
 end
@@ -253,84 +453,145 @@ pvz.WaitUntil = function (p)
     end
 end
 
-pvz.Prejudge = function (t)
-    local wave = pvz.Wave()
-    if wave == 9 or wave == 19 then
-        while pvz.WaveCD() > 4 do
-            coroutine.yield()
-        end
-        -- pvz.Delay(725 - t)   --maybe a choice
-        while pvz.HugeWaveCD() > t do
-            coroutine.yield()
-        end
-    else
-        while pvz.WaveCD() > t do
-            coroutine.yield()
-        end
-    end
-end
-
-pvz.CheckFor = function (pred, timeout, interval)
-    local expire = 0
-    while expire < timeout do
-        if pred() then
+pvz.Check = function(t, p, i)
+    if not i then i = 1 end
+    local tt = 0
+    while tt < t do
+        tt = tt + i
+        if p() then
             return true
         end
-
-        if interval then
-            pvz.Delay(interval)
-            expire = expire + interval
-        else
+        for _ = 1, i do
             coroutine.yield()
-            expire = expire + 1
         end
     end
     return false
 end
 
+local asm_version = 
+{
+    [1001] = true,
+    [2002] = true,
+}
+local use_asm = asm_version[pvz.version]
 
+local initPao = {}
+local recentPao = {}
 
-local startFromZero = true
-local function PaoCoroFun()
-    startFromZero = true
-    local plant_count_max = pvz.ReadMemory("uint32_t", {pvz_base, main_object, addr.plant_count_max})
-    local plant_offset = pvz.ReadMemory("uint32_t", {pvz_base, main_object, addr.plant})
-
-    for i = 0, plant_count_max - 1 do
-        local curOffset = plant_offset + addr.plant_struct_size * i
-        local plant_dead = pvz.ReadMemory("bool", {curOffset + addr.plant_dead})
-        local plant_squished = pvz.ReadMemory("bool", {curOffset + addr.plant_squished})
-        local plant_type = pvz.ReadMemory("uint32_t", {curOffset + addr.plant_type})
-        local plant_status = pvz.ReadMemory("uint32_t", {curOffset + addr.plant_status})
-        
-        if not plant_dead and not plant_squished and plant_type == 47 and plant_status == 37 then
-            local plant_hp = pvz.ReadMemory("uint32_t", {curOffset + addr.plant_hp})
-            local plant_row = pvz.ReadMemory("uint32_t", {curOffset + addr.plant_row})
-            local plant_col = pvz.ReadMemory("uint32_t", {curOffset + addr.plant_col})
-            coroutine.yield({plant_hp = plant_hp, plant_row = plant_row + 1, plant_col = plant_col + 1})
-            startFromZero = false
+local lastPao = 0
+local function GetPao()
+    local now = pvz.gameClock
+    for i, t in pairs(recentPao) do
+        if now - t > 600 then
+            recentPao[i] = nil
         end
     end
-    if startFromZero then
-        print("get pao a round end,not get")
-        coroutine.yield(nil)
+
+    for i = 0, #initPao - 1 do
+        local cur = (i + lastPao) % #initPao
+        local index, r, c = table.unpack(initPao[cur + 1])
+        local plant = pvz.PlantHead() + index
+        if plant.Type ~= 47 or not plant:Alive() then
+            local p, pi = pvz.GetPlantAt(r, c)
+            if p and p.Type == 47 then
+                initPao[i] = {pi, r, c}
+                plant = p
+                index = pi
+            end
+        end
+        if plant and plant.Type == 47 and plant:Alive() and plant.Status == 37 and not recentPao[index] then
+            lastPao = cur
+            return {plant_row = plant.Row + 1, plant_col = plant.Col + 1, plant_index = index}
+        end
     end
-    PaoCoroFun()       --tail call
-end
-local PaoCoro = coroutine.wrap(PaoCoroFun)
-local function GetPao()
-    return PaoCoro()
+
+
+    --[[local ret
+    local plant_count_max = pvz.ReadMemory("uint32_t", {pvz_base, main_object, addr.plant_count_max})
+    local ph = pvz.PlantHead()
+    for i = 0, plant_count_max - 1 do
+        local index = (lastPao + i) % plant_count_max
+        local plant = ph + index
+        if plant.Type == 47 and plant.Status == 37 and not plant.Dead and not plant.Squished and not recentPao[index] then
+            lastPao = index
+            ret = {plant_row = plant.Row + 1, plant_col = plant.Col + 1, plant_index = index}
+            break
+        end
+    end
+
+    if not ret then
+        return
+    end
+
+    if not recentPao[ret.plant_index] then
+        recentPao[ret.plant_index] = now
+        return ret
+    end]]
 end
 
-pvz.Pao = function (r, c)
+local fixing = false
+local fixPaoHp = 300
+local fixPaoSun = 3000
+
+local function FixPao()
+    if fixPaoHp >=300 or not pvz.GetCardIndexByName'玉米投手' or not pvz.GetCardIndexByName'玉米加农炮' then
+        return
+    end
+    for ii, v in ipairs(initPao) do
+        pvz.Delay(1)
+        if pvz.wave > 19 then
+            return
+        end
+        local i, r, c = table.unpack(v)
+        local p = pvz.PlantHead() + i
+        if p.Type ~= 47 or not p:Alive() or (p:Alive() and p.Hp < fixPaoHp and p.Status == 35 and p.StatusCountDown > 1450) then
+            if pvz.Sun() > fixPaoSun and pvz.CanUseCard('玉米加农炮') and pvz.CanUseCard'玉米投手' then
+                if p:Alive() and p.Type ~= 34 then
+                    pvz.RemovePlant(r, c)
+                end
+                pvz.UseCard('玉米', r, c)
+                pvz.Delay(751)
+                pvz.UseCard('玉米', r, c + 1)
+                pvz.UseCard('玉米加农炮', r, c)
+                pvz.Delay(2)
+                local newPao, newIndex = pvz.GetPlantAt(r, c)
+                initPao[ii] = {newIndex, r, c}
+                pvz.Delay(5001)
+            end
+        end
+    end
+    return FixPao()
+end
+pvz.SetFixPao = function(hp, sun)
+    fixPaoHp = hp
+    fixPaoSun = sun
+    AddTask(FixPao)
+end
+
+local function Pao(r, c, i)
+    if use_asm then
+        local x, y = pvz.GridToXY(r, c)
+        pvz.AddOp(1, x, y, i)
+        recentPao[i] = pvz.gameClock
+        return true
+    end
+end
+
+pvz.Pao = function (r, c, check)
     for _ = 1, 2 do
         local pao = GetPao()
         if not pao then
             print("no valid pao")
-            break
+            return false
         end
-        local near = math.abs(pao.plant_row - r) + math.abs(pao.plant_col - c) < 1.9
+        if use_asm then
+            local x, y = pvz.GridToXY(r, c)
+            pvz.AddOp(1, x, y, pao.plant_index)
+            recentPao[pao.plant_index] = pvz.gameClock
+            return true
+        end
 
+        local near = math.abs(pao.plant_row - r) + math.abs(pao.plant_col - c) < 1.9
         if near then
             near = math.abs(pao.plant_row - r) + math.abs(pao.plant_col - c + 1) < 1.9
             if not near then
@@ -342,10 +603,15 @@ pvz.Pao = function (r, c)
                 pvz.ClickFeild(pao.plant_row, pao.plant_col)
             end
             pvz.ClickFeild(r, c)
-            break
+            recentPao[i] = pvz.gameClock
+            return true
         else
             print("get pao to0 near", pao.plant_row, pao.plant_col, r, c)
         end
+    end
+    if check then
+        print("no valid pao", debug.traceback())
+        pvz.Error()
     end
 end
 
@@ -359,7 +625,7 @@ pvz.GetSpawnType = function()
     return spawnType
 end
 
-pvz.GetSpawnInfo = function ()
+pvz.UpdateSpawnInfo = function ()
     local spawnType = {}
     local mem = pvz.ReadMemoryArray("bool", 33, {pvz_base, main_object, addr.spawn_type})
     for i, v in ipairs(mem) do
@@ -390,7 +656,7 @@ pvz.GetAliveZombies = function()
     local zombies = {}
     local zombieOffset = pvz.ReadMemory("uint32_t", {pvz_base, main_object, addr.zombie})
     local zombieMaxCount = pvz.ReadMemory("uint32_t", {pvz_base, main_object, addr.zombie_count_max})
-    print("GetAliveZombies", zombieMaxCount, zombieOffset)
+    --print("GetAliveZombies", zombieMaxCount, zombieOffset)
     for i = 0, zombieMaxCount - 1 do
         local status = pvz.ReadMemory("uint32_t", {zombieOffset + i * addr.zombie_struct_size + addr.zombie_status})
         local dead = pvz.ReadMemory("bool", {zombieOffset + i * addr.zombie_struct_size + addr.zombie_dead})
@@ -398,34 +664,12 @@ pvz.GetAliveZombies = function()
             local zombie_type = pvz.ReadMemory("uint32_t", {zombieOffset + i * addr.zombie_struct_size + addr.zombie_type})
             local x = pvz.ReadMemory("float", {zombieOffset + i * addr.zombie_struct_size + addr.zombie_x})
             local y = pvz.ReadMemory("float", {zombieOffset + i * addr.zombie_struct_size + addr.zombie_y})
-            local hp = pvz.ReadMemory("uint32_t", {zombieOffset + i * addr.zombie_struct_size + 0xc8})
-            table.insert(zombies, {zombie_type = zombie_type, x = x, y = y, hp = hp})
-            print("GetAliveZombies", zombie_type, x, y, dead, pvz.GetZombieName(zombie_type), hp)
+            local hp = pvz.ReadMemory("uint32_t", {zombieOffset + i * addr.zombie_struct_size + addr.zombie_hp})
+            table.insert(zombies, {type = zombie_type, x = x, y = y, hp = hp})
+            --print("GetAliveZombies", zombie_type, x, y, dead, pvz.GetZombieName(zombie_type), hp)
         end
     end
     return zombies
-end
-
-pvz.GetCurPlants = function ()
-    local plants = {}
-    local plant_count_max = pvz.ReadMemory("uint32_t", {pvz_base, main_object, addr.plant_count_max})
-    local plant_offset = pvz.ReadMemory("uint32_t", {pvz_base, main_object, addr.plant})
-
-    for i = 0, plant_count_max - 1 do
-        local curOffset = plant_offset + addr.plant_struct_size * i
-        local plant_dead = pvz.ReadMemory("bool", {curOffset + addr.plant_dead})
-        local plant_squished = pvz.ReadMemory("bool", {curOffset + addr.plant_squished})
-        local plant_type = pvz.ReadMemory("uint32_t", {curOffset + addr.plant_type})
-        if not plant_dead and not plant_squished then
-            local plant = {}
-            plant.hp = pvz.ReadMemory("uint32_t", {curOffset + addr.plant_hp})
-            plant.row = pvz.ReadMemory("uint32_t", {curOffset + addr.plant_row})
-            plant.col = pvz.ReadMemory("uint32_t", {curOffset + addr.plant_col})
-            plant.type = plant_type
-            table.insert(plants, plant)
-        end
-    end
-    return plants
 end
 
 pvz.HasZombie = function (z, n)
@@ -453,120 +697,139 @@ CollectCoro = function ()
             if (x > 0 and y > 70) then
                 pvz.Click(math.floor(x + 20), math.floor(y + 20))
                 pvz.SafeClick()
-                pvz.Delay(10)
+                pvz.Delay(8)
             end
         end
     end
-    pvz.Delay(10)
+    pvz.Delay(8)
     CollectCoro()
 end
-AddTask(CollectCoro, "collect")
 
 local function FindCard(card)
 
 end
-pvz.UseCard = function (card, r, c)
-    local slotNum = pvz.SlotCount()
-    if type(card) == "table" then
+
+local slotCount
+local UseCard = function(cardIndex, r, c)
+    local seed = pvz.SeedHead() + (cardIndex - 1)
+    if not seed.IsUsable then
+        print("card cannot use", seed.Cd, seed.InitialCd, seed.Type, seed.ImitaterType)
+    end
+    if use_asm then
+        local x, y = pvz.GridToXY(r, c)
+        pvz.AddOp(2, x, y, cardIndex - 1)
+    else
+        local kmap = {[7] = 59, [8] = 55, [9] = 53, [10] = 51}
+        local k = kmap[slotCount] or 51
+        pvz.Click(50 + k * cardIndex, 42)
+        pvz.ClickFeild(r, c)
+        pvz.SafeClick()
+    end
+end
+
+pvz.GetPlantIndexByName = function(name)
+    local m1, m2
+    local imstr = {'模仿', "Imitater"}
+    for _, v in ipairs(imstr) do
+        m1, m2 = name:find(v)
+        if m1 then
+            break
+        end
+    end
+    
+    if m2 then
+        name = name:sub(m2 + 1)
+    end
+    
+    local plantIndex = PLANT[name]
+    if m2 then
+        plantIndex = -plantIndex
+    end
+    return plantIndex
+end
+
+pvz.GetCardIndexByName = function(name)
+    local plantIndex = pvz.GetPlantIndexByName(name)
+    for i, v in ipairs(cards) do
+        if v == plantIndex then
+            return i
+        end
+    end
+    print("unknown card", name)
+end
+
+pvz.CanUseCard = function(card)
+    local cardIndex
+    if type(card) == "string" then
+        cardIndex = pvz.GetCardIndexByName(card)
+    elseif type(card) == "number" and card >= 1 and card <= 10 then
+        cardIndex = card
+    end
+    if cardIndex then
+        local seed = pvz.SeedHead() + (cardIndex - 1)
+        return seed.IsUsable
+    end
+end
+
+pvz.UseCard = function(card, r, c)
+    if not slotCount then
+        slotCount = pvz.SlotCount()
+    end
+    if type(card) == "string" then
+        local cardIndex = pvz.GetCardIndexByName(card)
+        if cardIndex then
+            UseCard(cardIndex, r, c)
+        end
+    elseif type(card) == "number" then
+        UseCard(card, r, c)
+    elseif type(card) == "table" then
         for _, v in ipairs(card) do
             pvz.UseCard(v, r, c)
         end
-    elseif type(card) == "string" then
-        local plantIndex = PLANT[card]
-        for i, v in ipairs(cards) do
-            if v == plantIndex then
-                local kmap = {[7] = 59, [8] = 55, [9] = 53, [10] = 51}
-                print("UseCard", card, plantIndex, i, v, r, c)
-                local k = kmap[slotNum] or 51
-                pvz.Click(50 + k * i, 42)
-                pvz.ClickFeild(r, c)
-                pvz.SafeClick()
-                break
-            end
-        end
-    end    
+    end
 end
 
+pvz.GetPlantAt = function(r, c, t)
+    t = t or 0
+    for p, i in pvz.AlivePlants() do
+        if p.Row + 1 == r and p.Col + 1 == c then
+            if t == 1 and p.Type == 30 then
+                return p, i
+            elseif t == 0 and p.Type ~= 33 and p.Type ~= 16 and p.Type ~= 30 then
+                return p, i
+            end
+        end
+    end
+end
+
+pvz.RemovePlant = function(r, c, t)
+    t = t or 0
+
+    local remove = {}
+    local head = pvz.PlantHead()
+    local max = pvz.ReadMemory("int32_t", {pvz_base, main_object, addr.plant_count_max})
+    --for p in pvz.AlivePlants() do
+    for index = 0, max - 1 do
+        local p = head + index
+        if p.Row + 1 == r and p.Col + 1 == c and not p.Squished and not p.Dead then
+            if t == 3 then
+                table.insert(remove, index)
+            elseif t == 2 and p.Type ~= 33 and p.Type ~= 16 then
+                table.insert(remove, index)
+            elseif t == 1 and p.Type == 30 then
+                table.insert(remove, index)
+            elseif t == 0 and p.Type ~= 33 and p.Type ~= 16 and p.Type ~= 30 then
+                table.insert(remove, index)
+            end
+        end
+    end
+    for _, p in ipairs(remove) do
+        pvz.AddOp(3, p)
+    end
+end
 
 local function GotoGame ()
     --TODO
-end
-
-pvz.SetCards = function (...)
-    local c = {...}
-    cards = {}
-    for _, v in ipairs(c) do
-        print("SetCards", v, PLANT[v])
-        local plantIndex = PLANT[v]
-        table.insert(cards, plantIndex)
-    end
-end
-local function ChooseCard()
-    for _, v in ipairs(cards) do
-        local imit = false
-        if v < 0 then
-            v = -v
-            imit = true
-        end
-        local row, col = math.floor(v / 8), v % 8
-        print("choose", v, row, col)
-        if not imit then
-            pvz.Click(22 + 50/2 + col* 53, 123 + 70/2 + row * 70);
-        else
-            pvz.ButtonClick(490, 550);
-            pvz.SystemSleep(200)
-            pvz.Click(190 + 50/2 + col * 51, 125 + 70/2 + row * 71);
-        end
-        pvz.SystemSleep(50)
-    end
-    pvz.ButtonClick(234, 567)
-    pvz.SystemSleep(200)
-    if pvz.HasDialog() then
-        pvz.ButtonClick(300, 400)
-        pvz.SystemSleep(100)
-    end
-    local check = 100 / pvz.Speed()
-    if check < 30 then check = 30 end
-    for _ = 1, check do
-        if pvz.GameUI() == 3 then
-            return true
-        end
-        pvz.SystemSleep(100)
-    end
-
-    -- choose card failed
-    for _ = 1, 20 do
-        pvz.Click(100, 30)
-        pvz.SystemSleep(20)
-    end
-    
-    return false
-end
-pvz.ChooseCard = function(...)
-    if pvz.GameUI() == 3 then
-        return true
-    end
-    local cards = {...}
-    print("pvz.ChooseCard", #cards)
-    if #cards > 0 then
-        pvz.SetCards(cards)
-    end
-    repeat until ChooseCard()
-end
-pvz.RunEndless = function (round)
-    if not round then round = 9999999 end
-    GotoGame()
-    for r = 1, round do
-        print("round start", r, pvz.Sun())
-        if pvz.OnLevelStart then
-            pvz.OnLevelStart()
-        end
-        repeat until ChooseCard()
-        
-        pvz.RunOneLevel()
-        repeat pvz.SystemSleep(10) until pvz.GameUI() == 2
-        pvz.SystemSleep(500 * pvz.FrameDuration())
-    end
 end
 
 local seeds_string = {
@@ -682,6 +945,258 @@ end
 
 pvz.GetPlantName = function(p)
     return seeds_string[p+1][2]
+end
+
+function mp(...)
+    local s = ""
+    local tab = {...}
+    for i, v in ipairs(tab) do
+        if v then
+            s = s..v
+            if i < #tab then
+                s = s.."\t"
+            end
+        end
+    end
+    return s
+end
+
+local logfile = nil
+local log = function (...)
+    if logfile then
+        logfile:write(mp(...).."\n")
+    end
+end
+
+pvz.LogFile = function (file)
+    logfile = io.open(file, "w")
+    ori_print = print
+    print = function(...)
+        ori_print(...)
+        log(...)
+    end
+end
+
+local waveRefreshTime = {}
+local function UpdateRefreshTime()
+    local wave = pvz.wave + 1
+    if waveRefreshTime[wave] or wave > 20 then
+        return
+    end
+    local clock = pvz.gameClock
+    local wavecd = pvz.refreshCd
+
+    if wave == 1 then
+        if wavecd <= 599 and wavecd > 0 then
+            waveRefreshTime[wave] = wavecd + clock
+        end
+    elseif wave % 10 ~= 0 then
+        if wavecd <= 200 then
+            waveRefreshTime[wave] = wavecd + clock
+        end
+    else
+        if wavecd <= 200 and wavecd > 5 then
+            waveRefreshTime[wave] = wavecd + 745 + clock
+        elseif wavecd <= 5 then
+            waveRefreshTime[wave] = pvz.hugeCd + clock
+        end
+    end
+end
+
+local connectTimeTask = {}
+local curTimeTaskWave = 1
+
+local function ClearTimeTask()
+    waveRefreshTime = {}
+    connectTimeTask = {}
+    curTimeTaskWave = 1
+end
+
+local function UpdateTimeTask()
+    local clock = pvz.GameClock()
+    for w = curTimeTaskWave, 20 do
+        if not waveRefreshTime[w] then
+            break
+        end
+        local waveTask = connectTimeTask[w] or {}
+        local waveNowTime = clock - waveRefreshTime[w]
+        
+        for i, v in pairs(waveTask) do
+            if v.time <= waveNowTime then
+                v.func()
+                waveTask[i] = nil
+            end
+        end
+        if #waveTask == 0 then
+            curTimeTaskWave = curTimeTaskWave + 1
+        end
+    end
+end
+
+local function NowTime(wave)
+    if not wave then
+        wave = pvz.wave
+        if wave == 0 then
+            wave = 1
+        end
+    end
+
+    local refreshTime = waveRefreshTime[wave] or math.huge
+    return pvz.gameClock - refreshTime, wave
+end
+
+local function Connect(t, f)
+    local wave = t[1]
+    local time = t[2]
+    local now = NowTime(wave)
+    if time <= now then
+        f()
+        return
+    end
+
+    local waveTask = connectTimeTask[wave] or {}
+    table.insert(waveTask, {time = time, func = f})
+    connectTimeTask[wave] = waveTask
+end
+
+pvz.At = function(w, t)
+    local at = 
+    {
+        w = w, t = t,
+        Run = function(self, func, effectTime)
+            Connect({self.w, self.t - (effectTime or 0)}, func, true)
+            return self
+        end,
+        At = function(self, t)
+            self.t = t
+            return self
+        end,
+    }
+    return at
+end
+
+pvz.Now = function()
+    local w, t = NowTime()
+    return pvz.At(w, t)
+end
+
+pvz.NowTime = NowTime
+
+local function ChooseOneCard(card)
+    local imit = false
+    if card < 0 then
+        card = -card
+        imit = true
+    end
+
+    local row, col = math.floor(card / 8), card % 8
+    if not imit then
+        pvz.Click(22 + 50/2 + col* 53, 123 + 70/2 + row * 70);
+    else
+        pvz.ButtonClick(490, 550);
+        pvz.Click(190 + 50/2 + col * 51, 125 + 70/2 + row * 71);
+    end
+end
+
+local function ChooseCardProc()
+    pvz.WaitUntil(function() return pvz.GameUI() == 2 end)
+    GlobalDelay(485)
+    pvz.UpdateSpawnInfo()
+    pvz.NewLevel()
+    
+    while true do
+        if #cards < 5 then
+            print("you has not select cards")
+            return
+        end
+        for _, v in ipairs(cards) do
+            ChooseOneCard(v)
+            GlobalDelay(3)
+        end
+
+        --Lets Rock
+        pvz.ButtonClick(234, 567)
+        GlobalDelay(3)
+        if pvz.HasDialog() then
+            pvz.ButtonClick(300, 400)
+            GlobalDelay(3)
+        end
+
+        if pvz.Check(400, function() return pvz.GameUI() ~= 2 end) then
+            return
+        end
+        print("choose card check end", pvz.GameUI(), check)
+        if pvz.GameUI() ~= 2 then
+            return
+        end
+
+        for _ = 1, 20 do
+            pvz.Click(100, 30)
+            GlobalDelay(2)
+        end
+    end
+end
+
+local ChooseCardTask
+
+function OnEnterSelectCardsStage()
+    pvz.scene = pvz.ReadMemory("uint32_t", {pvz_base, main_object, addr.scene})
+    ChooseCardTask = coroutine.create(ChooseCardProc)
+end
+
+pvz.SelectCards = function(c)
+    cards = {}
+    for _, v in ipairs(c) do
+        local plantIndex = pvz.GetPlantIndexByName(v)
+        table.insert(cards, plantIndex)
+    end
+end
+
+function OnEnterFightState()
+    AddTask(CollectCoro, "collect")
+    if #initPao == 0 then
+        for p, i in pvz.AlivePlants() do
+            if p.Type == 47 then
+                table.insert(initPao, {i, p.Row + 1, p.Col + 1})
+            end
+        end
+    end
+end
+
+function OnLeaveFightState()
+    ClearTimeTask()
+    TaskList = {}
+end
+
+function TickGlobal()
+    if ChooseCardTask then
+        local s, m = coroutine.resume(ChooseCardTask)
+        if not s then
+            print("TickGlobal", m, debug.traceback(ChooseCardTask))
+            pvz.Error()
+            ChooseCardTask = nil
+        end
+        if coroutine.status(ChooseCardTask) == "dead" then
+            ChooseCardTask = nil
+        end
+    end
+end
+
+function TickGame()
+    UpdateRefreshTime()
+    UpdateTimeTask()
+
+    for k, v in pairs(TaskList) do
+        local s, m = coroutine.resume(v)
+        if not s then
+            print("tick game error", s, m, k)
+            pvz.Error()
+            TaskList[k] = nil
+        end
+        if coroutine.status(v) == "dead" then
+            TaskList[k] = nil
+        end
+    end
 end
 
 return pvz

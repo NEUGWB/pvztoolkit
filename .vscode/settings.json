@@ -75,6 +75,13 @@
         "xtree": "cpp",
         "xutility": "cpp",
         "coroutine": "cpp",
-        "resumable": "cpp"
-    }
+        "resumable": "cpp",
+        "cassert": "cpp",
+        "deque": "cpp",
+        "queue": "cpp",
+        "set": "cpp"
+    },
+    "C_Cpp.clang_format_fallbackStyle": "Microsoft",
+    "editor.formatOnSave": true,
+    "C_Cpp.clang_format_sortIncludes": false
 }

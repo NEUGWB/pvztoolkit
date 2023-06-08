@@ -2,6 +2,10 @@
 @echo off
 chcp 65001
 
+if "%1" == "copy" (
+    goto :end
+)
+
 call "C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Auxiliary\Build\vcvarsall.bat" x86
 
 REM cd /d D:\repo\pvztoolkit
@@ -16,8 +20,21 @@ set LIB=.\zlib\lib;%LIB%
 set INCLUDE=.\lua\include;%INCLUDE%
 set LIB=.\lua\lib;%LIB%
 
+if "%1" == "server" (
+    goto :server
+)
+
+
+if NOT "%1" == "debug" (
+    goto :release
+)
+
+:server
+cl.exe /LD .\server\server.cpp ws2_32.lib /std:c++20 /EHsc /Febin\server.dll
+goto :end
+
+:debug
 if exist .\out\pvztoolkitd.exe del .\out\pvztoolkitd.exe
-if exist .\out\pvztoolkit.exe nmake -f makefile.release clean
 
 nmake -f makefile.debug
 
@@ -26,9 +43,10 @@ if not exist .\out\pvztoolkitd.exe goto :end
 mt.exe -nologo ^
 -manifest ".\res\ptk.manifest" ^
 -outputresource:".\out\pvztoolkitd.exe;#1"
+goto :end
 
-goto :end rem release
-
+:release
+echo "release build"
 nmake -f makefile.release clean
 nmake -f makefile.release
 
@@ -57,6 +75,9 @@ gpg --verify $file.asc $file
 
 :end
 
-if not exist .\out\splash.png copy bin\splash.png .\out
-if not exist .\out\lineup.yml copy bin\lineup.yml .\out
-if not exist .\out\builds.yml copy bin\builds.yml .\out
+copy /y bin\splash.png .\out
+copy /y bin\lineup.yml .\out
+copy /y bin\builds.yml .\out
+copy /y bin\server.dll .\out
+
+xcopy /y /i /e .\bin\script .\out\script

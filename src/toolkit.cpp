@@ -5,8 +5,7 @@
 namespace Pt
 {
 
-Toolkit::Toolkit(int width, int height, const char *title)
-    : Window(width, height, title)
+Toolkit::Toolkit(int width, int height, const char *title) : Window(width, height, title)
 {
     this->path = std::filesystem::current_path();
 
@@ -26,7 +25,7 @@ Toolkit::Toolkit(int width, int height, const char *title)
 
     // 工作类
 
-    pvz = new Script();
+    pvz = new PvZ();
     pvz->callback(cb_find_result, this);
     // pvz->FindPvZ(); // 在 main() 里调用
 
@@ -534,16 +533,14 @@ void Toolkit::cb_script(Fl_Widget *, void *w)
 
 void Toolkit::cb_script()
 {
-    CHAR szFileName[MAX_PATH] = {0};
+    Script::Init();
 
+    CHAR szFileName[MAX_PATH] = {0};
     OPENFILENAMEA ofn;
     ZeroMemory(&ofn, sizeof(ofn));
     ofn.lStructSize = sizeof(ofn);
     ofn.hwndOwner = nullptr;
-    // hInstance
     ofn.lpstrFilter = "Lua (*.lua)\0*.lua\0";
-    // lpstrCustomFilter
-    // nMaxCustFilter
     ofn.nFilterIndex = 1;
     ofn.lpstrFile = szFileName;
     ofn.lpstrFile[0] = '\0';
@@ -551,22 +548,11 @@ void Toolkit::cb_script()
     ofn.lpstrFileTitle = nullptr;
     ofn.nMaxFileTitle = 0;
     ofn.lpstrInitialDir = nullptr;
-    // lpstrTitle
     ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST;
-    // nFileOffset
-    // nFileExtension
-    // lpstrDefExt
-    // lCustData
-    // lpfnHook
-    // lpTemplateName
-    // pvReserved
-    // dwReserved
-    // FlagsEx
+
     if (GetOpenFileNameA(&ofn) == TRUE)
     {
-        Script *script = static_cast<Script *>(pvz);
-        script->init();
-        script->run(szFileName);
+        Script::Run(szFileName);
     }
     else
     {
@@ -909,13 +895,8 @@ void Toolkit::cb_lineup_mode()
     bool do_do_callback = pvz->IsValid();
 
     std::vector<Fl_Check_Button *> check_buttons = {
-        check_auto_collected,
-        check_free_planting,
-        check_plant_invincible,
-        check_plant_weak,
-        check_reload_instantly,
-        check_stop_spawning,
-        check_no_fog,
+        check_auto_collected,   check_free_planting, check_plant_invincible, check_plant_weak,
+        check_reload_instantly, check_stop_spawning, check_no_fog,
     };
 
     if (check_lineup_mode->value())
@@ -1117,15 +1098,13 @@ void Toolkit::cb_userdata(Fl_Widget *, void *w)
 
 void Toolkit::cb_userdata()
 {
-    auto open = [](std::string p)
-    {
+    auto open = [](std::string p) {
         DWORD fa = GetFileAttributesA(p.c_str());
         if ((fa != INVALID_FILE_ATTRIBUTES) && (fa & FILE_ATTRIBUTE_DIRECTORY))
             ShellExecuteA(nullptr, "open", p.c_str(), nullptr, nullptr, SW_SHOWNORMAL);
     };
 
-    auto wopen = [](std::wstring p)
-    {
+    auto wopen = [](std::wstring p) {
         DWORD fa = GetFileAttributesW(p.c_str());
         if ((fa != INVALID_FILE_ATTRIBUTES) && (fa & FILE_ATTRIBUTE_DIRECTORY))
             ShellExecuteW(nullptr, L"open", p.c_str(), nullptr, nullptr, SW_SHOWNORMAL);

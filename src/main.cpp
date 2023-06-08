@@ -22,9 +22,12 @@
 #include "../res/version.h"
 
 #define IDI_ICON 1001
+#pragma warning(disable : 4996)
 
 static_assert(_MSC_VER >= 1929);
 static_assert(sizeof(void *) == 4);
+
+Pt::PvZ *g_pvz;
 
 bool VerifySignature(LPCWSTR);
 
@@ -87,6 +90,14 @@ int main(int argc, char **argv)
         else
             return 0xF7;
     }
+
+    AllocConsole();
+    SetConsoleTitle(TEXT("ptk"));
+    freopen("CON", "w", stdout);
+    SetConsoleOutputCP(CP_UTF8);
+    SetConsoleCP(CP_UTF8);
+
+    printf("ptk start");
 
     // 界面背景颜色
     Fl::background(243, 243, 243);
@@ -214,6 +225,8 @@ int main(int argc, char **argv)
 
     // 主窗口
     Pt::Toolkit pvztoolkit(0, 0, "");
+    g_pvz = pvztoolkit.pvz;
+    assert(g_pvz);
     pvztoolkit.callback(window_callback);
 
 #ifdef _DEBUG
@@ -280,7 +293,8 @@ bool VerifySignature(LPCWSTR pwszSourceFile)
     LONG lStatus = WinVerifyTrust(NULL, &WVTPolicyGUID, &WinTrustData);
     // wprintf_s(L"WinVerifyTrust lStatus is: 0x%x.\n", lStatus);
 
-    [[maybe_unused]] bool sig_good = (lStatus == ERROR_SUCCESS || lStatus == CERT_E_CHAINING || lStatus == TRUST_E_COUNTER_SIGNER);
+    [[maybe_unused]] bool sig_good =
+        (lStatus == ERROR_SUCCESS || lStatus == CERT_E_CHAINING || lStatus == TRUST_E_COUNTER_SIGNER);
     [[maybe_unused]] bool sig_not_bad = (lStatus != TRUST_E_NOSIGNATURE && lStatus != TRUST_E_BAD_DIGEST);
     isGoodSignature = sig_not_bad; // TODO
 

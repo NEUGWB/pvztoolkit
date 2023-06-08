@@ -30,24 +30,19 @@ class Process
     bool IsValid();
 
     // 读内存
-    template <typename T>
-    T ReadMemory(std::vector<uintptr_t>);
+    template <typename T> T ReadMemory(const std::vector<uintptr_t> &);
 
     // 读内存字符串
-    template <>
-    std::string ReadMemory<std::string>(std::vector<uintptr_t>);
+    template <> std::string ReadMemory<std::string>(const std::vector<uintptr_t> &);
 
     // 写内存
-    template <typename T>
-    void WriteMemory(T, std::initializer_list<uintptr_t>);
+    template <typename T> void WriteMemory(T, std::initializer_list<uintptr_t>);
 
     // 读内存数组
-    template <typename T, size_t size>
-    std::array<T, size> ReadMemory(std::vector<uintptr_t>);
+    template <typename T, size_t size> std::array<T, size> ReadMemory(std::vector<uintptr_t>);
 
     // 写内存数组
-    template <typename T, size_t size>
-    void WriteMemory(std::array<T, size>, std::initializer_list<uintptr_t>);
+    template <typename T, size_t size> void WriteMemory(std::array<T, size>, std::initializer_list<uintptr_t>);
 
   public:
     HWND hwnd;     // 窗口句柄
@@ -77,8 +72,16 @@ class Process
 #endif
 };
 
-template <typename T>
-T Process::ReadMemory(std::vector<uintptr_t> addr)
+inline void PrintReadError(const std::vector<uintptr_t> &addr, int loc)
+{
+    std::cout << "ReadMemory Error ";
+    for (size_t i = 0; i < addr.size(); ++i)
+    {
+        std::cout << addr[i] << ' ';
+    }
+    std::cout << "at " << loc << std::endl;
+}
+template <typename T> T Process::ReadMemory(const std::vector<uintptr_t> &addr)
 {
     T result = T();
 
@@ -91,16 +94,22 @@ T Process::ReadMemory(std::vector<uintptr_t> addr)
         if (it != addr.end() - 1)
         {
             unsigned long read_size = 0;
-            int ret = ReadProcessMemory(this->handle, (const void *)(offset + *it), &offset, sizeof(offset), &read_size);
+            int ret =
+                ReadProcessMemory(this->handle, (const void *)(offset + *it), &offset, sizeof(offset), &read_size);
             if (ret == 0 || sizeof(offset) != read_size)
+            {
                 return T();
+            }
         }
         else
         {
             unsigned long read_size = 0;
-            int ret = ReadProcessMemory(this->handle, (const void *)(offset + *it), &result, sizeof(result), &read_size);
+            int ret =
+                ReadProcessMemory(this->handle, (const void *)(offset + *it), &result, sizeof(result), &read_size);
             if (ret == 0 || sizeof(result) != read_size)
+            {
                 return T();
+            }
         }
     }
 
@@ -111,8 +120,7 @@ T Process::ReadMemory(std::vector<uintptr_t> addr)
     return result;
 }
 
-template <>
-inline std::string Process::ReadMemory<std::string>(std::vector<uintptr_t> addr)
+template <> inline std::string Process::ReadMemory<std::string>(const std::vector<uintptr_t> &addr)
 {
     std::string result = std::string();
 
@@ -125,7 +133,8 @@ inline std::string Process::ReadMemory<std::string>(std::vector<uintptr_t> addr)
         if (it != addr.end() - 1)
         {
             SIZE_T read_size = 0;
-            int ret = ReadProcessMemory(this->handle, (const void *)(offset + *it), &offset, sizeof(offset), &read_size);
+            int ret =
+                ReadProcessMemory(this->handle, (const void *)(offset + *it), &offset, sizeof(offset), &read_size);
             if (ret == 0 || sizeof(offset) != read_size)
                 return std::string();
         }
@@ -153,8 +162,7 @@ inline std::string Process::ReadMemory<std::string>(std::vector<uintptr_t> addr)
     return result;
 }
 
-template <typename T>
-void Process::WriteMemory(T value, std::initializer_list<uintptr_t> addr)
+template <typename T> void Process::WriteMemory(T value, std::initializer_list<uintptr_t> addr)
 {
     if (!IsValid())
         return;
@@ -165,7 +173,8 @@ void Process::WriteMemory(T value, std::initializer_list<uintptr_t> addr)
         if (it != addr.end() - 1)
         {
             unsigned long read_size = 0;
-            int ret = ReadProcessMemory(this->handle, (const void *)(offset + *it), &offset, sizeof(offset), &read_size);
+            int ret =
+                ReadProcessMemory(this->handle, (const void *)(offset + *it), &offset, sizeof(offset), &read_size);
             if (ret == 0 || sizeof(offset) != read_size)
                 return;
         }
@@ -185,8 +194,7 @@ void Process::WriteMemory(T value, std::initializer_list<uintptr_t> addr)
 #endif
 }
 
-template <typename T, size_t size>
-std::array<T, size> Process::ReadMemory(std::vector<uintptr_t> addr)
+template <typename T, size_t size> std::array<T, size> Process::ReadMemory(std::vector<uintptr_t> addr)
 {
     std::array<T, size> result = {T()};
 
@@ -200,7 +208,8 @@ std::array<T, size> Process::ReadMemory(std::vector<uintptr_t> addr)
         if (it != addr.end() - 1)
         {
             unsigned long read_size = 0;
-            int ret = ReadProcessMemory(this->handle, (const void *)(offset + *it), &offset, sizeof(offset), &read_size);
+            int ret =
+                ReadProcessMemory(this->handle, (const void *)(offset + *it), &offset, sizeof(offset), &read_size);
             if (ret == 0 || sizeof(offset) != read_size)
                 return std::array<T, size>{T()};
         }
@@ -240,7 +249,8 @@ void Process::WriteMemory(std::array<T, size> value, std::initializer_list<uintp
         if (it != addr.end() - 1)
         {
             unsigned long read_size = 0;
-            int ret = ReadProcessMemory(this->handle, (const void *)(offset + *it), &offset, sizeof(offset), &read_size);
+            int ret =
+                ReadProcessMemory(this->handle, (const void *)(offset + *it), &offset, sizeof(offset), &read_size);
             if (ret == 0 || sizeof(offset) != read_size)
                 return;
         }

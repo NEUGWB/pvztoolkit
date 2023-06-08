@@ -35,8 +35,7 @@ namespace Pt
 // 包括 类型, 数目, 地址, 修改值, 原始值
 // 一个功能的实现可能需要多个 hack
 // 地址为 0 / -1 时忽略
-template <typename T, size_t size>
-struct HACK
+template <typename T, size_t size> struct HACK
 {
     uintptr_t mem_addr;
     std::array<T, size> hack_value;
@@ -259,6 +258,11 @@ class Data
 
     // 根据版本号获取数据
     PVZ_DATA data();
+
+    int version()
+    {
+        return find_result;
+    }
 
   protected:
     // 查找结果
