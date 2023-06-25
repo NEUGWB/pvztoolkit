@@ -1,4 +1,5 @@
-local pvz = require "script.config" 
+local pvz = require "script.pvz"
+pvz.Lineup = "LI43bJyUdO0CJnmXAlJ0X1h0dmdFdlpTSQRkYkUYCVhMcldUL/tMuVY="
 
 local function ZombieAlive()
     for v in pvz.AliveZombies() do
@@ -34,17 +35,21 @@ local function WaveEnd(w)
 end
 
 pvz.NewLevel = function()
-    pvz.SelectCards({"樱桃", "荷叶", "向日葵", "模仿咖啡豆", "末日菇", "咖啡豆", "南瓜头", "冰川菇", "大喷", "曾哥"})
+    pvz.SelectCards({"樱桃", "荷叶", "向日葵", "模仿咖啡豆", "末日菇", "咖啡豆", "南瓜头", "冰川菇", "玉米", "玉米加农炮"})
+    pvz.SetFixPao(150, 3000)
     for w = 1, 20 do
         pvz.At(w, -42):Run(pvz.NewTask(function()
-            repeat 
+            repeat
                 Fire()
-                pvz.Delay(601)
+                pvz.Delay(450)
             until WaveEnd(w)
         end))
     end
-    
-    pvz.At(20, -650):Run(function()
+
+    --[[pvz.At(20, -650):Run(function()
         pvz.UseCard({'寒冰菇', '模仿咖啡豆'}, 6, 1)
+    end)]]
+    pvz.At(20, 250 - 370):Run(function()
+        pvz.Pao(4, 7.5)
     end)
 end

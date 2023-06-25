@@ -101,3 +101,5 @@ struct pvz_mem_t
     uint32_t call_remove = 0;
 };
 } // namespace C2S
+
+inline const char *INJECT_ONCE = "PVZ_INJECTED";

@@ -127,7 +127,7 @@ void Connect()
         }
 
         C2S::sync_t sync;
-        sync.op_num = vecOp.size();
+        sync.op_num = (uint16_t)vecOp.size();
         Send(sync);
         for (auto &op : vecOp)
         {
@@ -257,6 +257,13 @@ BOOL InjectDll(HANDLE hProcess, LPCSTR szDllName, DWORD *pErrCode)
 
     do
     {
+        HANDLE hMutex = OpenMutexA(MUTEX_ALL_ACCESS, FALSE, INJECT_ONCE);
+        if (hMutex)
+        {
+            CloseHandle(hMutex);
+            bRet = TRUE;
+            break;
+        }
         DWORD attr = GetFileAttributesA(szDllName);
         if (attr == INVALID_FILE_ATTRIBUTES || (attr & FILE_ATTRIBUTE_DIRECTORY))
         {

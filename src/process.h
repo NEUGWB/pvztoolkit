@@ -4,7 +4,6 @@
 #include <iostream>
 #include <sstream>
 #include <string>
-#include <initializer_list>
 #include <array>
 #include <vector>
 #include <cassert>
@@ -36,13 +35,13 @@ class Process
     template <> std::string ReadMemory<std::string>(const std::vector<uintptr_t> &);
 
     // 写内存
-    template <typename T> void WriteMemory(T, std::initializer_list<uintptr_t>);
+    template <typename T> void WriteMemory(T, std::vector<uintptr_t>);
 
     // 读内存数组
     template <typename T, size_t size> std::array<T, size> ReadMemory(std::vector<uintptr_t>);
 
     // 写内存数组
-    template <typename T, size_t size> void WriteMemory(std::array<T, size>, std::initializer_list<uintptr_t>);
+    template <typename T, size_t size> void WriteMemory(std::array<T, size>, std::vector<uintptr_t>);
 
   public:
     HWND hwnd;     // 窗口句柄
@@ -162,7 +161,7 @@ template <> inline std::string Process::ReadMemory<std::string>(const std::vecto
     return result;
 }
 
-template <typename T> void Process::WriteMemory(T value, std::initializer_list<uintptr_t> addr)
+template <typename T> void Process::WriteMemory(T value, std::vector<uintptr_t> addr)
 {
     if (!IsValid())
         return;
@@ -234,8 +233,7 @@ template <typename T, size_t size> std::array<T, size> Process::ReadMemory(std::
     return result;
 }
 
-template <typename T, size_t size>
-void Process::WriteMemory(std::array<T, size> value, std::initializer_list<uintptr_t> addr)
+template <typename T, size_t size> void Process::WriteMemory(std::array<T, size> value, std::vector<uintptr_t> addr)
 {
     if (!IsValid())
         return;

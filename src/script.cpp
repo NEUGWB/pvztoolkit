@@ -3,6 +3,8 @@
 #include <future>
 #include <lua.hpp>
 #include <filesystem>
+#include <FL/Fl.H>
+#include "lineup.h"
 
 #pragma warning(disable : 4244)
 #pragma comment(lib, "winmm.lib")
@@ -35,7 +37,11 @@ int lua_pcall_msg(lua_State *L, int n, int r, int f)
 struct RunInMainThread
 {
     std::function<void()> _func;
-    std::promise<void> &promise;
+    std::promise<void> promise;
+
+    RunInMainThread(std::function<void()> &&fun) : _func(fun)
+    {
+    }
 
     static void ThreadFun(void *data)
     {
@@ -46,9 +52,8 @@ struct RunInMainThread
 
     void Run()
     {
-        std::promise<void> promise;
-        Fl::awake(RunInMainThread::ThreadFun, this);
         std::future<void> future = promise.get_future();
+        Fl::awake(RunInMainThread::ThreadFun, this);
         return future.get();
     }
 };
@@ -105,15 +110,6 @@ int Lua_ReadMemory(lua_State *L)
     addr.reserve(6);
 
     std::string type = luaL_checkstring(L, 1);
-    // int num = luaL_checkinteger(L, 2);
-
-    /*lua_pushnil(L);
-    while (lua_next(L, -2))
-    {
-        addr.push_back((uintptr_t)luaL_checkinteger(L, -1));
-        lua_pop(L, 1);
-    }*/
-    // lua_pop(L, 1);
 
     int n = lua_rawlen(L, -1);
     for (int i = 1; i <= n; ++i)
@@ -172,6 +168,68 @@ int Lua_ReadMemory(lua_State *L)
     return 1;
 }
 
+int Lua_WriteMemory(lua_State *L)
+{
+    std::vector<uintptr_t> addr;
+    addr.reserve(6);
+
+    std::string type = luaL_checkstring(L, 1);
+
+    lua_pushvalue(L, 2);
+    int n = lua_rawlen(L, -1);
+    for (int i = 1; i <= n; ++i)
+    {
+        lua_rawgeti(L, -1, i);
+        addr.push_back((uintptr_t)luaL_checkinteger(L, -1));
+        lua_pop(L, 1);
+    }
+    lua_pop(L, 1);
+
+    if (type == "float")
+    {
+        float v = lua_tonumber(L, 3);
+        g_pvz->WriteMemory(v, addr);
+    }
+    else if (type == "bool")
+    {
+        uint8_t v = lua_toboolean(L, 3);
+        g_pvz->WriteMemory(v, addr);
+    }
+    else if (type == "uint32_t")
+    {
+        uint32_t v = lua_tointeger(L, 3);
+        g_pvz->WriteMemory(v, addr);
+    }
+    else if (type == "int32_t")
+    {
+        int32_t v = lua_tointeger(L, 3);
+        printf("write memory %d ", v);
+        for (auto a : addr)
+        {
+            printf("0x%x ", a);
+        }
+        printf("\n");
+        g_pvz->WriteMemory(v, addr);
+    }
+    else if (type == "int16_t")
+    {
+        int16_t v = lua_tointeger(L, 3);
+        g_pvz->WriteMemory(v, addr);
+    }
+    else if (type == "int8_t")
+    {
+        int8_t v = lua_tointeger(L, 3);
+        g_pvz->WriteMemory(v, addr);
+    }
+    else
+    {
+        lua_pushstring(L, "unsupport read memory type");
+        lua_error(L);
+    }
+
+    return 0;
+}
+
 #define GET_X_LPARAM(lp) ((int)(short)LOWORD(lp))
 #define GET_Y_LPARAM(lp) ((int)(short)HIWORD(lp))
 
@@ -212,7 +270,45 @@ int Lua_AddOp(lua_State *L)
 
 int Lua_Error(lua_State *L)
 {
-    ::MessageBoxA(NULL, "error", "pause", MB_OK);
+    //::MessageBoxA(NULL, "error", "pause", MB_OK);
+    const char *lua_msg = lua_tostring(L, 1);
+    if (!lua_msg)
+    {
+        lua_msg = "error";
+    }
+    RunInMainThread thread([=] { fl_alert(lua_msg); });
+    thread.Run();
+    return 0;
+}
+
+int Lua_SetLineup(lua_State *L)
+{
+    const char *pstr = luaL_checkstring(L, 1);
+    if (!pstr)
+    {
+        return 0;
+    }
+    Pt::Lineup lineup(pstr);
+    if (!lineup.OK())
+    {
+        return 0;
+    }
+    int ui = g_pvz->GameUI();
+    if (ui != 2 && ui != 3)
+    {
+        return 0;
+    }
+    RunInMainThread thread([=] {
+        g_pvz->ReloadInstantly(true);
+        g_pvz->SetLineup(lineup);
+    });
+    thread.Run();
+
+    std::thread reload([=] {
+        ::Sleep(50);
+        g_pvz->ReloadInstantly(false);
+    });
+    reload.detach();
     return 0;
 }
 
@@ -221,9 +317,11 @@ void set_lua_api()
     luaL_Reg funcs[] = {{"SystemSleep", Lua_Sleep},
                         {"PostMessage", Lua_PostMessage},
                         {"ReadProcessMemory", Lua_ReadMemory},
+                        {"WriteProcessMemory", Lua_WriteMemory},
                         {"GetPixel", Lua_GetPixel},
                         {"AddOp", Lua_AddOp},
                         {"Error", Lua_Error},
+                        {"SetLineup", Lua_SetLineup},
 
                         {NULL, NULL}};
     lua_getglobal(g_lua, "pvz");
@@ -349,6 +447,21 @@ void ActiveWindow()
 BOOL g_injected = false;
 void Init()
 {
+    if (g_injected)
+    {
+        return;
+    }
+
+    g_lua = luaL_newstate();
+    luaL_openlibs(g_lua);
+    lua_newtable(g_lua);
+    lua_setglobal(g_lua, "pvz");
+
+    set_pvz_address();
+    set_dpi();
+    set_version();
+    set_lua_api();
+
     // DLL注入
     if (!g_injected)
     {
@@ -360,25 +473,12 @@ void Init()
         g_injected = InjectDll(g_pvz->handle, fpath.string().c_str(), &err);
         printf("InjectDll return %s %d %d\n", fpath.string().c_str(), g_injected, err);
     }
-    if (!g_injected)
-    {
-        return;
-    }
 
-    if (g_lua)
+    if (g_injected)
     {
-        lua_close(g_lua);
+        std::thread t(Connect);
+        t.detach();
     }
-    timeBeginPeriod(1);
-    g_lua = luaL_newstate();
-    luaL_openlibs(g_lua);
-    lua_newtable(g_lua);
-    lua_setglobal(g_lua, "pvz");
-
-    set_pvz_address();
-    set_dpi();
-    set_version();
-    set_lua_api();
 }
 
 void CallLuaFunction(const char *func)
@@ -397,7 +497,6 @@ DWORD lastGameClock = -1;
 DWORD lastGlobalClock = -1;
 DWORD lastGameUI = -1;
 bool fightStart = false;
-bool script_valid = false;
 void Tick(DWORD gameUI, DWORD gameClock, DWORD globalClock, DWORD refreshCd, DWORD hugeCd, DWORD wave)
 {
     if (lastGameUI == -1 && gameUI != 2)
@@ -455,6 +554,11 @@ void Tick(DWORD gameUI, DWORD gameClock, DWORD globalClock, DWORD refreshCd, DWO
 
 void Run(const char *script)
 {
+    int ui = g_pvz->GameUI();
+    while (ui == 2 || ui == 3)
+    {
+        fl_alert("不要在战斗界面运行脚本");
+    }
     ::Sleep(500);
     if (!g_pvz || !g_pvz->IsValid() || !g_lua)
     {
@@ -469,11 +573,6 @@ void Run(const char *script)
         printf("luaL_dofile error : %s\n %s\n", script, errstr);
         return;
     }
-
-    script_valid = true;
-
-    std::thread t(Connect);
-    t.detach();
 }
 
 } // namespace Script

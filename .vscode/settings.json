@@ -79,7 +79,8 @@
         "cassert": "cpp",
         "deque": "cpp",
         "queue": "cpp",
-        "set": "cpp"
+        "set": "cpp",
+        "bitset": "cpp"
     },
     "C_Cpp.clang_format_fallbackStyle": "Microsoft",
     "editor.formatOnSave": true,

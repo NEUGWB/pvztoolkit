@@ -279,6 +279,8 @@ void InitServer()
     t.detach();
 }
 
+HANDLE g_mutex;
+
 BOOL APIENTRY DllMain(HMODULE hModule, DWORD ul_reason_for_call, LPVOID lpReserved)
 {
     char buff[128];
@@ -291,6 +293,8 @@ BOOL APIENTRY DllMain(HMODULE hModule, DWORD ul_reason_for_call, LPVOID lpReserv
         SetConsoleTitle(TEXT("avz_lua"));
         freopen("CON", "w", stdout);
         setlocale(LC_ALL, "chs");
+
+        g_mutex = CreateMutexA(NULL, NULL, INJECT_ONCE);
 
         InitServer();
         break;

@@ -2,6 +2,125 @@ local pvz = pvz
 local ZOMBIE = {}
 local PLANT = {}
 
+PEASHOOTER = 0 -- 豌豆射手 
+SUNFLOWER = 1 -- 向日葵    
+CHERRY_BOMB = 2 -- 樱桃炸弹
+WALL_NUT = 3 -- 坚果       
+POTATO_MINE = 4 -- 土豆地雷
+SNOW_PEA = 5 -- 寒冰射手   
+CHOMPER = 6 -- 大嘴花      
+REPEATER = 7 -- 双重射手   
+PUFF_SHROOM = 8 -- 小喷菇  
+SUN_SHROOM = 9 -- 阳光菇   
+FUME_SHROOM = 10 -- 大喷菇
+GRAVE_BUSTER = 11 -- 墓碑吞噬者
+HYPNO_SHROOM = 12 -- 魅惑菇
+SCAREDY_SHROOM = 13 -- 胆小菇
+ICE_SHROOM = 14 -- 寒冰菇
+DOOM_SHROOM = 15 -- 毁灭菇
+LILY_PAD = 16 -- 荷叶
+SQUASH = 17 -- 倭瓜
+THREEPEATER = 18 -- 三发射手
+TANGLE_KELP = 19 -- 缠绕海藻
+JALAPENO = 20 -- 火爆辣椒
+SPIKEWEED = 21 -- 地刺
+TORCHWOOD = 22 -- 火炬树桩
+TALL_NUT = 23 -- 高坚果
+SEA_SHROOM = 24 -- 水兵菇
+PLANTERN = 25 -- 路灯花
+CACTUS = 26 -- 仙人掌
+BLOVER = 27 -- 三叶草
+SPLIT_PEA = 28 -- 裂荚射手
+STARFRUIT = 29 -- 杨桃
+PUMPKIN = 30 -- 南瓜头
+MAGNET_SHROOM = 31 -- 磁力菇
+CABBAGE_PULT = 32 -- 卷心菜投手
+FLOWER_POT = 33 -- 花盆
+KERNEL_PULT = 34 -- 玉米投手
+COFFEE_BEAN = 35 -- 咖啡豆
+GARLIC = 36 -- 大蒜
+UMBRELLA_LEAF = 37 -- 叶子保护伞
+MARIGOLD = 38 -- 金盏花
+MELON_PULT = 39 -- 西瓜投手
+GATLING_PEA = 40 -- 机枪射手
+TWIN_SUNFLOWER = 41 -- 双子向日葵
+GLOOM_SHROOM = 42 -- 忧郁菇
+CATTAIL = 43 -- 香蒲
+WINTER_MELON = 44 -- 冰西瓜投手
+GOLD_MAGNET = 45 -- 吸金磁
+SPIKEROCK = 46 -- 地刺王
+COB_CANNON = 47 -- 玉米加农炮
+IMITATOR = 48 -- 模仿者
+
+M_PEASHOOTER = 49 -- 豌豆射手
+M_SUNFLOWER = 50 -- 向日葵
+M_CHERRY_BOMB = 51 -- 樱桃炸弹
+M_WALL_NUT = 52 -- 坚果
+M_POTATO_MINE = 53 -- 土豆地雷
+M_SNOW_PEA = 54 -- 寒冰射手
+M_CHOMPER = 55 -- 大嘴花
+M_REPEATER = 56 -- 双重射手
+M_PUFF_SHROOM = 57 -- 小喷菇
+M_SUN_SHROOM = 58 -- 阳光菇
+M_FUME_SHROOM = 59 -- 大喷菇
+M_GRAVE_BUSTER = 60 -- 墓碑吞噬者
+M_HYPNO_SHROOM = 61 -- 魅惑菇
+M_SCAREDY_SHROOM = 62 -- 胆小菇
+M_ICE_SHROOM = 63 -- 寒冰菇
+M_DOOM_SHROOM = 64 -- 毁灭菇
+M_LILY_PAD = 65 -- 荷叶
+M_SQUASH = 66 -- 倭瓜
+M_THREEPEATER = 67 -- 三发射手
+M_TANGLE_KELP = 68 -- 缠绕海藻
+M_JALAPENO = 69 -- 火爆辣椒
+M_SPIKEWEED = 70 -- 地刺
+M_TORCHWOOD = 71 -- 火炬树桩
+M_TALL_NUT = 72 -- 高坚果
+M_SEA_SHROOM = 73 -- 水兵菇
+M_PLANTERN = 74 -- 路灯花
+M_CACTUS = 75 -- 仙人掌
+M_BLOVER = 76 -- 三叶草
+M_SPLIT_PEA = 77 -- 裂荚射手
+M_STARFRUIT = 78 -- 杨桃
+M_PUMPKIN = 79 -- 南瓜头
+M_MAGNET_SHROOM = 80 -- 磁力菇
+M_CABBAGE_PULT = 81 -- 卷心菜投手
+M_FLOWER_POT = 82 -- 花盆
+M_KERNEL_PULT = 83 -- 玉米投手
+M_COFFEE_BEAN = 84 -- 咖啡豆
+M_GARLIC = 85 -- 大蒜
+M_UMBRELLA_LEAF = 86 -- 叶子保护伞
+M_MARIGOLD = 87 -- 金盏花
+M_MELON_PULT = 88 -- 西瓜投手
+
+PUJIANG = 0 -- 普僵
+FLAG_ZOMBIE = 1 -- 旗帜
+CONEHEAD_ZOMBIE = 2 -- 路障
+POLE_VAULTING_ZOMBIE = 3 -- 撑杆
+BUCKETHEAD_ZOMBIE = 4 -- 铁桶
+NEWSPAPER_ZOMBIE = 5 -- 读报
+SCREEN_DOOR_ZOMBIE = 6 -- 铁门
+FOOTBALL_ZOMBIE = 7 -- 橄榄
+DANCING_ZOMBIE = 8 -- 舞王
+BACKUP_DANCER = 9 -- 伴舞
+DUCKY_TUBE_ZOMBIE = 10 -- 鸭子
+SNORKEL_ZOMBIE = 11 -- 潜水
+ZOMBONI = 12 -- 冰车
+ZOMBIE_BOBSLED_TEAM = 13 -- 雪橇
+DOLPHIN_RIDER_ZOMBIE = 14 -- 海豚
+JACK_IN_THE_BOX_ZOMBIE = 15 -- 小丑
+BALLOON_ZOMBIE = 16 -- 气球
+DIGGER_ZOMBIE = 17 -- 矿工
+POGO_ZOMBIE = 18 -- 跳跳
+ZOMBIE_YETI = 19 -- 雪人
+BUNGEE_ZOMBIE = 20 -- 蹦极
+LADDER_ZOMBIE = 21 -- 扶梯
+CATAPULT_ZOMBIE = 22 -- 投篮
+GARGANTUAR = 23 -- 白眼
+IMP = 24 -- 小鬼
+DR_ZOMBOSS = 25 -- 僵博
+GIGA_GARGANTUAR = 32 -- 红眼
+
 local cards = {1,2,3,4,5,6,7,8,9,10}
 
 local addr = pvz.addr
@@ -59,9 +178,9 @@ addr.plant_hp = 0x40
 
 local _meta_pvz_struct
 local function LuaPvzStruct(ptr, meta)
-    local struct = {_ptr = ptr, 
-        _memory = rawget(meta, "_memory"), 
-        _size = rawget(meta, "_size"), 
+    local struct = {_ptr = ptr,
+        _memory = rawget(meta, "_memory"),
+        _size = rawget(meta, "_size"),
         _method = rawget(meta, "_method")
     }
 
@@ -70,7 +189,7 @@ local function LuaPvzStruct(ptr, meta)
     return struct
 end
 
-_meta_pvz_struct = 
+_meta_pvz_struct =
 {
     __index = function(t, k)
         --print("_meta_pvz_struct", t, k)
@@ -113,8 +232,8 @@ _meta_pvz_struct =
         return LuaPvzStruct(ptr, t)
     end,
 
-    --[[__newindex = function(t, k, v)
-        print("__newindex", t, k, v)
+    __newindex = function(t, k, v)
+        --print("__newindex", t, k, v)
         local _memory = rawget(t, "_memory")
         local _ptr = rawget(t, "_ptr")
         if not _memory or not _ptr then
@@ -125,12 +244,12 @@ _meta_pvz_struct =
         if not mem then
             print("__newindex not valid key", t, k)
         end
-        PvzStruct_Write(_ptr, mem[1], mem[2], v)
-    end]]
+        pvz.WriteMemory(mem[1], {_ptr + mem[2]}, v)
+    end
 }
 
 local _meta_seed = {
-    _memory = 
+    _memory =
     {
         IsUsable = {"bool", 0x48 + 0x28},
         Cd = {"int32_t", 0x24 + 0x28},
@@ -147,7 +266,7 @@ pvz.SeedHead = function()
 end
 
 local _meta_plant = {
-    _memory = 
+    _memory =
     {
         Row = {"int32_t", addr.plant_row},
         Col = {"int32_t", addr.plant_col},
@@ -161,7 +280,7 @@ local _meta_plant = {
         Squished = {"bool", addr.plant_squished},
         --Sleeping = {"bool", addr.plant_asleep},
     },
-    _method = 
+    _method =
     {
         Alive = function(v) return not v.Dead and not v.Squished end,
     },
@@ -174,7 +293,7 @@ pvz.PlantHead = function()
 end
 
 local _meta_zombie = {
-    _memory = 
+    _memory =
     {
         X = {"int32_t", addr.zombie_x},
         Y = {"int32_t", addr.zombie_y},
@@ -190,7 +309,7 @@ local _meta_zombie = {
 
         Dead = {"bool", addr.zombie_dead},
     },
-    _method = 
+    _method =
     {
         Alive = function(z)
             local st = z.Status
@@ -223,7 +342,7 @@ end
 pvz.AliveZombies = function()
     local zombies = pvz.ZombieHead()
     local max = pvz.ReadMemory("int32_t", {pvz_base, main_object, addr.zombie_count_max})
-    local alive = function(z) 
+    local alive = function(z)
         return z:Alive()
     end
     return ObjectIter(zombies, max, alive)
@@ -250,7 +369,7 @@ local function MakeLongWithDpi (x, y)
     return MakeLong(x, y)
 end
 
-local WIN_ENUM = 
+local WIN_ENUM =
 {
     WM_LBUTTONDOWN = 0x0201,
     WM_LBUTTONUP = 0X202,
@@ -322,8 +441,7 @@ end
 local type_size = {
     float = 4,
     uint32_t = 4,
-    uint16_t = 2,
-    uint8_t = 1,
+    int32_t = 4,
     bool = 1,
 }
 pvz.ReadMemory = function(t, a)
@@ -334,6 +452,10 @@ pvz.ReadMemory = function(t, a)
         pvz.Error("read memory error")
     end
     return ret
+end
+
+pvz.WriteMemory = function(t, a, v)
+    pvz.WriteProcessMemory(t, a, v)
 end
 
 pvz.ReadMemoryArray = function(t, n, a)
@@ -357,39 +479,39 @@ pvz.ReadMemoryArray = function(t, n, a)
 end
 
 pvz.GameClock = function()
-    return pvz.ReadMemory("uint32_t", {pvz_base, main_object, addr.game_clock})
+    return pvz.ReadMemory("int32_t", {pvz_base, main_object, addr.game_clock})
 end
 
 pvz.Sun = function()
-    return pvz.ReadMemory("uint32_t", {pvz_base, main_object, addr.sun})
+    return pvz.ReadMemory("int32_t", {pvz_base, main_object, addr.sun})
 end
 
 pvz.GameUI = function ()
-    return pvz.ReadMemory("uint32_t", {pvz_base, addr.game_ui})
+    return pvz.ReadMemory("int32_t", {pvz_base, addr.game_ui})
 end
 
 pvz.HasDialog = function ()
-    return pvz.ReadMemory("uint32_t", {pvz_base, addr.mouse_window, addr.popup_window}) ~= 0
+    return pvz.ReadMemory("int32_t", {pvz_base, addr.mouse_window, addr.popup_window}) ~= 0
 end
 
 pvz.Wave = function ()
-    return pvz.ReadMemory("uint32_t", {pvz_base, main_object, addr.wave})
+    return pvz.ReadMemory("int32_t", {pvz_base, main_object, addr.wave})
 end
 
 pvz.WaveCD = function ()
-    return pvz.ReadMemory("uint32_t", {pvz_base, main_object, addr.wave_cd})
+    return pvz.ReadMemory("int32_t", {pvz_base, main_object, addr.wave_cd})
 end
 
 pvz.HugeWaveCD = function ()
-    return pvz.ReadMemory("uint32_t", {pvz_base, main_object, addr.big_wave_cd})
+    return pvz.ReadMemory("int32_t", {pvz_base, main_object, addr.big_wave_cd})
 end
 
 pvz.WordType = function ()
-    return pvz.ReadMemory("uint32_t", {pvz_base, main_object, addr.word, addr.word_type})
+    return pvz.ReadMemory("int32_t", {pvz_base, main_object, addr.word, addr.word_type})
 end
 
 pvz.SlotCount = function ()
-    return pvz.ReadMemory("uint32_t", {pvz_base, main_object, addr.slot, addr.slot_count})
+    return pvz.ReadMemory("int32_t", {pvz_base, main_object, addr.slot, addr.slot_count})
 end
 
 pvz.Speed = function ()
@@ -398,7 +520,7 @@ pvz.Speed = function ()
 end
 
 pvz.FrameDuration = function ()
-    return pvz.ReadMemory("uint32_t", {pvz_base, addr.frame_duration})
+    return pvz.ReadMemory("int32_t", {pvz_base, addr.frame_duration})
 end
 
 local TaskList = {}
@@ -468,7 +590,7 @@ pvz.Check = function(t, p, i)
     return false
 end
 
-local asm_version = 
+local asm_version =
 {
     [1001] = true,
     [2002] = true,
@@ -491,52 +613,18 @@ local function GetPao()
         local cur = (i + lastPao) % #initPao
         local index, r, c = table.unpack(initPao[cur + 1])
         local plant = pvz.PlantHead() + index
-        if plant.Type ~= 47 or not plant:Alive() then
-            local p, pi = pvz.GetPlantAt(r, c)
-            if p and p.Type == 47 then
-                initPao[i] = {pi, r, c}
-                plant = p
-                index = pi
-            end
-        end
-        if plant and plant.Type == 47 and plant:Alive() and plant.Status == 37 and not recentPao[index] then
+
+        if not recentPao[index] and plant.Type == 47 and plant:Alive() and plant.Status == 37 then
             lastPao = cur
             return {plant_row = plant.Row + 1, plant_col = plant.Col + 1, plant_index = index}
         end
     end
-
-
-    --[[local ret
-    local plant_count_max = pvz.ReadMemory("uint32_t", {pvz_base, main_object, addr.plant_count_max})
-    local ph = pvz.PlantHead()
-    for i = 0, plant_count_max - 1 do
-        local index = (lastPao + i) % plant_count_max
-        local plant = ph + index
-        if plant.Type == 47 and plant.Status == 37 and not plant.Dead and not plant.Squished and not recentPao[index] then
-            lastPao = index
-            ret = {plant_row = plant.Row + 1, plant_col = plant.Col + 1, plant_index = index}
-            break
-        end
-    end
-
-    if not ret then
-        return
-    end
-
-    if not recentPao[ret.plant_index] then
-        recentPao[ret.plant_index] = now
-        return ret
-    end]]
 end
 
-local fixing = false
 local fixPaoHp = 300
 local fixPaoSun = 3000
 
 local function FixPao()
-    if fixPaoHp >=300 or not pvz.GetCardIndexByName'玉米投手' or not pvz.GetCardIndexByName'玉米加农炮' then
-        return
-    end
     for ii, v in ipairs(initPao) do
         pvz.Delay(1)
         if pvz.wave > 19 then
@@ -544,9 +632,10 @@ local function FixPao()
         end
         local i, r, c = table.unpack(v)
         local p = pvz.PlantHead() + i
+        --print("fix pao check", p.Type, p:Alive(), p.Hp, pvz.Sun())
         if p.Type ~= 47 or not p:Alive() or (p:Alive() and p.Hp < fixPaoHp and p.Status == 35 and p.StatusCountDown > 1450) then
             if pvz.Sun() > fixPaoSun and pvz.CanUseCard('玉米加农炮') and pvz.CanUseCard'玉米投手' then
-                if p:Alive() and p.Type ~= 34 then
+                if p:Alive() and p.Type == 47 then
                     pvz.RemovePlant(r, c)
                 end
                 pvz.UseCard('玉米', r, c)
@@ -562,10 +651,10 @@ local function FixPao()
     end
     return FixPao()
 end
+
 pvz.SetFixPao = function(hp, sun)
     fixPaoHp = hp
     fixPaoSun = sun
-    AddTask(FixPao)
 end
 
 local function Pao(r, c, i)
@@ -582,7 +671,7 @@ pvz.Pao = function (r, c, check)
         local pao = GetPao()
         if not pao then
             print("no valid pao")
-            return false
+            break
         end
         if use_asm then
             local x, y = pvz.GridToXY(r, c)
@@ -635,7 +724,7 @@ pvz.UpdateSpawnInfo = function ()
     end
     pvz.SPAWN_TYPE = spawnType
 
-    mem = pvz.ReadMemoryArray("uint32_t", 1000, {pvz_base, main_object, addr.spawn_list})
+    mem = pvz.ReadMemoryArray("int32_t", 1000, {pvz_base, main_object, addr.spawn_list})
     local spawnList = {}
     for j = 0, 19 do
         local spawn = {}
@@ -652,26 +741,6 @@ pvz.UpdateSpawnInfo = function ()
     pvz.SPAWN_LIST = spawnList
 end
 
-pvz.GetAliveZombies = function()
-    local zombies = {}
-    local zombieOffset = pvz.ReadMemory("uint32_t", {pvz_base, main_object, addr.zombie})
-    local zombieMaxCount = pvz.ReadMemory("uint32_t", {pvz_base, main_object, addr.zombie_count_max})
-    --print("GetAliveZombies", zombieMaxCount, zombieOffset)
-    for i = 0, zombieMaxCount - 1 do
-        local status = pvz.ReadMemory("uint32_t", {zombieOffset + i * addr.zombie_struct_size + addr.zombie_status})
-        local dead = pvz.ReadMemory("bool", {zombieOffset + i * addr.zombie_struct_size + addr.zombie_dead})
-        if not dead and status ~= 1 and status ~= 2 and status ~= 3 then
-            local zombie_type = pvz.ReadMemory("uint32_t", {zombieOffset + i * addr.zombie_struct_size + addr.zombie_type})
-            local x = pvz.ReadMemory("float", {zombieOffset + i * addr.zombie_struct_size + addr.zombie_x})
-            local y = pvz.ReadMemory("float", {zombieOffset + i * addr.zombie_struct_size + addr.zombie_y})
-            local hp = pvz.ReadMemory("uint32_t", {zombieOffset + i * addr.zombie_struct_size + addr.zombie_hp})
-            table.insert(zombies, {type = zombie_type, x = x, y = y, hp = hp})
-            --print("GetAliveZombies", zombie_type, x, y, dead, pvz.GetZombieName(zombie_type), hp)
-        end
-    end
-    return zombies
-end
-
 pvz.HasZombie = function (z, n)
     local index = pvz.ZOMBIE[z]
     if not index then return false end
@@ -685,7 +754,7 @@ end
 
 local CollectCoro
 CollectCoro = function ()
-    local item_count_max = pvz.ReadMemory("uint32_t", {pvz_base, main_object, addr.item_max_num})
+    local item_count_max = pvz.ReadMemory("int32_t", {pvz_base, main_object, addr.item_max_num})
     local item_offset = pvz.ReadMemory("uint32_t", {pvz_base, main_object, addr.item})
     for i = 0, item_count_max - 1 do
         local curOffset = item_offset + addr.item_struct_size * i
@@ -736,11 +805,11 @@ pvz.GetPlantIndexByName = function(name)
             break
         end
     end
-    
+
     if m2 then
         name = name:sub(m2 + 1)
     end
-    
+
     local plantIndex = PLANT[name]
     if m2 then
         plantIndex = -plantIndex
@@ -1020,7 +1089,7 @@ local function UpdateTimeTask()
         end
         local waveTask = connectTimeTask[w] or {}
         local waveNowTime = clock - waveRefreshTime[w]
-        
+
         for i, v in pairs(waveTask) do
             if v.time <= waveNowTime then
                 v.func()
@@ -1060,7 +1129,7 @@ local function Connect(t, f)
 end
 
 pvz.At = function(w, t)
-    local at = 
+    local at =
     {
         w = w, t = t,
         Run = function(self, func, effectTime)
@@ -1103,7 +1172,7 @@ local function ChooseCardProc()
     GlobalDelay(485)
     pvz.UpdateSpawnInfo()
     pvz.NewLevel()
-    
+
     while true do
         if #cards < 5 then
             print("you has not select cards")
@@ -1140,7 +1209,7 @@ end
 local ChooseCardTask
 
 function OnEnterSelectCardsStage()
-    pvz.scene = pvz.ReadMemory("uint32_t", {pvz_base, main_object, addr.scene})
+    pvz.scene = pvz.ReadMemory("int32_t", {pvz_base, main_object, addr.scene})
     ChooseCardTask = coroutine.create(ChooseCardProc)
 end
 
@@ -1153,13 +1222,23 @@ pvz.SelectCards = function(c)
 end
 
 function OnEnterFightState()
+    if pvz.Lineup then
+        pvz.SetLineup(pvz.Lineup)
+        pvz.Lineup = nil
+    end
+
     AddTask(CollectCoro, "collect")
+
     if #initPao == 0 then
         for p, i in pvz.AlivePlants() do
             if p.Type == 47 then
                 table.insert(initPao, {i, p.Row + 1, p.Col + 1})
             end
         end
+    end
+
+    if fixPaoHp < 300 and pvz.GetCardIndexByName'玉米' and pvz.GetCardIndexByName'玉米炮' then
+        AddTask(FixPao)
     end
 end
 
