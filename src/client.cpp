@@ -88,6 +88,14 @@ void ConnectServer()
         pvz_mem.call_release = 0x410200;
     }
 
+    if (g_pvz->version() == PVZ_GOTY_1_2_0_1073_EN)
+    {
+        pvz_mem.call_fire = 0x46A810;
+        pvz_mem.call_card = 0x4931C0;
+        pvz_mem.call_plant = 0x4126F0;
+        pvz_mem.call_release = 0x40F670;
+    }
+
     if (g_pvz->isGOTY())
     {
         pvz_mem.refresh_cd += 0x18;

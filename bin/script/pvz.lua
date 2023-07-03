@@ -593,6 +593,7 @@ end
 local asm_version =
 {
     [1001] = true,
+    [2001] = true,
     [2002] = true,
 }
 local use_asm = asm_version[pvz.version]
@@ -1213,9 +1214,9 @@ function OnEnterSelectCardsStage()
     ChooseCardTask = coroutine.create(ChooseCardProc)
 end
 
-pvz.SelectCards = function(c)
+pvz.SelectCards = function(...)
     cards = {}
-    for _, v in ipairs(c) do
+    for _, v in ipairs({...}) do
         local plantIndex = pvz.GetPlantIndexByName(v)
         table.insert(cards, plantIndex)
     end
