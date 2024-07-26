@@ -50,6 +50,6 @@ pvz.NewLevel = function()
         pvz.UseCard({'寒冰菇', '模仿咖啡豆'}, 6, 1)
     end)]]
     pvz.At(20, 250 - 370):Run(function()
-        pvz.Pao(4, 7.5)
+        pvz.Pao(4, 7.625)
     end)
 end
