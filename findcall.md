@@ -46,3 +46,19 @@ tab内存布局，双击地址=00401000 text 可执行代码 一行，能直接�
 重复一次“运行到返回、步过”，EIP上一行为发炮地址
 
 ![alt text](img/call/call_fire.png)
+
+# Rock开始游戏
+## CheatEngine偏移地址
+找到卡槽数量的偏移，依次是data里的lawn，board，slot，slot_count
+
+![alt text](img/call/ce_offset.png)
+右键添加的地址，找出谁访问了这个地址，找出什么访问这个指针指向的地址
+
+点击lets rock按钮后出现1，1，10次，选择中间那个，显示反汇编程序
+
+![alt text](img/call/read_slot_count.png)
+
+汇编窗口中往上找到函数入口，即为地址
+
+![alt text](img/call/call_rock.png)
+### Rock call年度版和原版的调用约定不同！！！

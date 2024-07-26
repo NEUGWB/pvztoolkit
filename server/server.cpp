@@ -15,6 +15,8 @@ uint32_t call_card_ptr;
 uint32_t call_release_ptr;
 uint32_t call_remove_ptr;
 
+uint32_t call_rock_ptr;
+
 uint32_t pvz_update_fun;
 
 C2S::pvz_mem_t pvz_mem;
@@ -60,6 +62,8 @@ void Accept()
         call_card_ptr = pvz_mem.call_card;
         call_release_ptr = pvz_mem.call_release;
         call_remove_ptr = pvz_mem.call_remove;
+
+        call_rock_ptr = pvz_mem.call_rock;
         Hook();
     }
 }
@@ -146,6 +150,37 @@ void ASMCard(int x, int y, int index)
     }
 }
 
+void ASMRock()
+{
+    if (!call_rock_ptr)
+    {
+        return;
+    }
+    uint32_t screen = ReadMemory<uint32_t>({pvz_mem.pvz_base, pvz_mem.card_screen});
+    printf("asm rock 0x%p 0x%p\n", pvz_mem.card_screen, call_rock_ptr);
+
+    if (pvz_mem.main_object == 0x868)
+    {
+        __asm
+        {
+            pushad
+            push screen
+            call call_rock_ptr
+            popad
+        }
+    }
+    else
+    {
+        __asm
+        {
+            pushad
+            mov ebx, screen
+            call call_rock_ptr
+            popad
+        }
+    }
+}
+
 void ASMRemove(int index)
 {
     uint32_t plant = ReadMemory<uint32_t>({pvz_mem.pvz_base, pvz_mem.main_object, pvz_mem.plant});
@@ -188,6 +223,9 @@ void RecvSync()
             break;
         case C2S::OP_TYPE::SHOVEL:
             ASMRemove(op.param1);
+            break;
+        case C2S::OP_TYPE::ROCK:
+            ASMRock();
             break;
         }
     }
