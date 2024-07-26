@@ -569,11 +569,19 @@ pvz.Delay = function(t)
     end
 end
 
+pvz.DelayUntil = function(w, t)
+    while pvz.NowTime(w) < t do
+        coroutine.yield()
+    end
+end
+
 pvz.WaitUntil = function (p)
     while not p() do
         coroutine.yield()
     end
 end
+
+
 
 pvz.Check = function(t, p, i)
     if not i then i = 1 end
@@ -653,7 +661,7 @@ local function FixPao()
     return FixPao()
 end
 
-pvz.SetFixPao = function(hp, sun)
+pvz.AutoFixPao = function(hp, sun)
     fixPaoHp = hp
     fixPaoSun = sun
 end
@@ -845,6 +853,7 @@ pvz.UseCard = function(card, r, c)
     if not slotCount then
         slotCount = pvz.SlotCount()
     end
+    --print("use card", card, r, c, type(card))
     if type(card) == "string" then
         local cardIndex = pvz.GetCardIndexByName(card)
         if cardIndex then
@@ -1111,7 +1120,7 @@ local function NowTime(wave)
         end
     end
 
-    local refreshTime = waveRefreshTime[wave] or math.huge
+    local refreshTime = waveRefreshTime[wave] or 99999999999
     return pvz.gameClock - refreshTime, wave
 end
 
@@ -1134,7 +1143,7 @@ pvz.At = function(w, t)
     {
         w = w, t = t,
         Run = function(self, func, effectTime)
-            Connect({self.w, self.t - (effectTime or 0)}, func, true)
+            Connect({self.w, self.t - (effectTime or 0)}, pvz.NewTask(func), true)
             return self
         end,
         At = function(self, t)
@@ -1185,14 +1194,20 @@ local function ChooseCardProc()
         end
 
         --Lets Rock
-        pvz.ButtonClick(234, 567)
-        GlobalDelay(3)
-        if pvz.HasDialog() then
-            pvz.ButtonClick(300, 400)
+        if use_asm then
+            GlobalDelay(30)
+            pvz.AddOp(4, 0, 0, 0)
+            GlobalDelay(30)
+        else
+            pvz.ButtonClick(234, 567)
             GlobalDelay(3)
+            if pvz.HasDialog() then
+                pvz.ButtonClick(300, 400)
+                GlobalDelay(3)
+            end
         end
 
-        if pvz.Check(400, function() return pvz.GameUI() ~= 2 end) then
+        if pvz.Check(500, function() return pvz.GameUI() ~= 2 end) then
             return
         end
         print("choose card check end", pvz.GameUI(), check)
