@@ -1168,6 +1168,11 @@ local function ChooseOneCard(card)
         imit = true
     end
 
+    if use_asm then
+        pvz.AddOp(5, card, imit and 1 or 0, 0)
+        return
+    end
+
     local row, col = math.floor(card / 8), card % 8
     if not imit then
         pvz.Click(22 + 50/2 + col* 53, 123 + 70/2 + row * 70);

@@ -68,8 +68,8 @@ enum class OP_TYPE : uint32_t
     FIRE = 1,
     CARD = 2,
     SHOVEL = 3,
-
     ROCK = 4,
+    CHOOSE = 5,
 };
 
 struct op_t
@@ -95,6 +95,7 @@ struct pvz_mem_t
 
     uint32_t plant;
     uint32_t seed;
+    uint32_t choose_seed;
 
     uint32_t card_screen;
 
@@ -103,6 +104,7 @@ struct pvz_mem_t
     uint32_t call_plant = 0;
     uint32_t call_release = 0;
     uint32_t call_remove = 0;
+    uint32_t call_choose = 0;
 
     uint32_t call_rock = 0;
 };
