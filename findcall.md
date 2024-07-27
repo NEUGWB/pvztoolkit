@@ -62,3 +62,13 @@ tab内存布局，双击地址=00401000 text 可执行代码 一行，能直接�
 
 ![alt text](img/call/call_rock.png)
 ### Rock call年度版和原版的调用约定不同！！！
+
+# 选卡
+同Rock，找到卡槽数量的偏移，依次是data里的lawn，board，slot，slot_count
+右键添加的地址，找出谁访问了这个地址，找出什么访问这个指针指向的地址
+进行选卡，卡选满后继续选卡，可以看到一个函数不变一个函数继续增加
+
+![alt text](img/call/choose_read.png)
+选择继续增加那个，查看汇编，往上找到函数入口即为地址
+
+![alt text](img/call/call_choose.png)

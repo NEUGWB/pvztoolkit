@@ -2,6 +2,7 @@
 #include <iostream>
 #include <thread>
 #pragma warning(disable : 4996)
+#pragma comment(lib, "User32.lib")
 
 SOCKET avz_sock_remote = INVALID_SOCKET;
 
@@ -16,6 +17,7 @@ uint32_t call_release_ptr;
 uint32_t call_remove_ptr;
 
 uint32_t call_rock_ptr;
+uint32_t call_choose_ptr;
 
 uint32_t pvz_update_fun;
 
@@ -26,7 +28,7 @@ SOCKET ClientSocket = INVALID_SOCKET;
 
 void _Error(const char *msg)
 {
-    //::MessageBoxA(NULL, msg, "error", MB_OK);
+    ::MessageBoxA(NULL, msg, "error", MB_OK);
     printf("error : %s\n", msg);
 }
 
@@ -64,6 +66,7 @@ void Accept()
         call_remove_ptr = pvz_mem.call_remove;
 
         call_rock_ptr = pvz_mem.call_rock;
+        call_choose_ptr = pvz_mem.call_choose;
         Hook();
     }
 }
@@ -181,6 +184,46 @@ void ASMRock()
     }
 }
 
+void ASMChoose(int card, bool imm)
+{
+    if (!call_choose_ptr)
+    {
+        return;
+    }
+    uint32_t screen = ReadMemory<uint32_t>({pvz_mem.pvz_base, pvz_mem.card_screen});
+    uint32_t seed = screen + pvz_mem.choose_seed;
+    uint32_t seed2 = ReadMemory<uint32_t>({pvz_mem.pvz_base, pvz_mem.card_screen, pvz_mem.choose_seed});
+
+    printf("asm choose %d %d 0x%p 0x%p 0x%p\n", card, imm, seed, seed2, screen);
+
+    if (!imm)
+    {
+        seed += card * 60;
+        __asm
+        {
+            pushad
+            mov eax, screen
+            push seed
+            call call_choose_ptr
+            popad
+        }
+    }
+    else
+    {
+        seed += 48 * 60;
+        *(uint32_t *)(seed + 0x24) = 3;
+        *(uint32_t *)(seed + 0x34) = card;
+        __asm
+        {
+            pushad
+            mov eax, screen
+            push seed
+            call call_choose_ptr
+            popad
+        }
+    }
+}
+
 void ASMRemove(int index)
 {
     uint32_t plant = ReadMemory<uint32_t>({pvz_mem.pvz_base, pvz_mem.main_object, pvz_mem.plant});
@@ -226,6 +269,9 @@ void RecvSync()
             break;
         case C2S::OP_TYPE::ROCK:
             ASMRock();
+            break;
+        case C2S::OP_TYPE::CHOOSE:
+            ASMChoose(op.param1, op.param2);
             break;
         }
     }

@@ -1092,7 +1092,7 @@ local function ClearTimeTask()
 end
 
 local function UpdateTimeTask()
-    local clock = pvz.GameClock()
+    local clock = pvz.gameClock
     for w = curTimeTaskWave, 20 do
         if not waveRefreshTime[w] then
             break
@@ -1105,9 +1105,6 @@ local function UpdateTimeTask()
                 v.func()
                 waveTask[i] = nil
             end
-        end
-        if #waveTask == 0 then
-            curTimeTaskWave = curTimeTaskWave + 1
         end
     end
 end
@@ -1133,9 +1130,12 @@ local function Connect(t, f)
         return
     end
 
-    local waveTask = connectTimeTask[wave] or {}
+    local waveTask = connectTimeTask[wave]
+    if not waveTask then
+        waveTask = {}
+        connectTimeTask[wave] = waveTask
+    end
     table.insert(waveTask, {time = time, func = f})
-    connectTimeTask[wave] = waveTask
 end
 
 pvz.At = function(w, t)
@@ -1166,6 +1166,11 @@ local function ChooseOneCard(card)
     if card < 0 then
         card = -card
         imit = true
+    end
+
+    if use_asm then
+        pvz.AddOp(5, card, imit and 1 or 0, 0)
+        return
     end
 
     local row, col = math.floor(card / 8), card % 8
@@ -1208,12 +1213,10 @@ local function ChooseCardProc()
         end
 
         if pvz.Check(500, function() return pvz.GameUI() ~= 2 end) then
+            print("choose card check success", pvz.GameUI())
             return
         end
-        print("choose card check end", pvz.GameUI(), check)
-        if pvz.GameUI() ~= 2 then
-            return
-        end
+        print("choose card check fail", pvz.GameUI())
 
         for _ = 1, 20 do
             pvz.Click(100, 30)
@@ -1284,7 +1287,7 @@ function TickGame()
     for k, v in pairs(TaskList) do
         local s, m = coroutine.resume(v)
         if not s then
-            print("tick game error", s, m, k)
+            print("tick game error", s, m, k, debug.traceback())
             pvz.Error()
             TaskList[k] = nil
         end

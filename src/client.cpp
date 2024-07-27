@@ -78,9 +78,11 @@ void ConnectServer()
         pvz_mem.call_card = 0x488590;
         pvz_mem.call_plant = 0x40fd30;
         pvz_mem.call_release = 0x40CD80;
-
         pvz_mem.call_rock = 0x486d20;
+        pvz_mem.call_choose = 0x486030;
+
         pvz_mem.card_screen = 0x774;
+        pvz_mem.choose_seed = 0xA4;
     }
 
     if (g_pvz->version() == PVZ_GOTY_1_2_0_1096_EN)
@@ -89,9 +91,11 @@ void ConnectServer()
         pvz_mem.call_card = 0x496c30;
         pvz_mem.call_plant = 0x413250;
         pvz_mem.call_release = 0x410200;
-
         pvz_mem.call_rock = 0x495370;
+        pvz_mem.call_choose = 0x494690;
+
         pvz_mem.card_screen = 0x774 + 0x100;
+        pvz_mem.choose_seed = 0xA4 + (0xd3c - 0xd24);
     }
 
     if (g_pvz->version() == PVZ_GOTY_1_2_0_1073_EN)
@@ -100,9 +104,11 @@ void ConnectServer()
         pvz_mem.call_card = 0x4931C0;
         pvz_mem.call_plant = 0x4126F0;
         pvz_mem.call_release = 0x40F670;
-
         pvz_mem.call_rock = 0x491900;
+        pvz_mem.call_choose = 0x490c20;
+
         pvz_mem.card_screen = 0x774 + 0x100;
+        pvz_mem.choose_seed = 0xA4 + (0xd3c - 0xd24);
     }
 
     if (g_pvz->isGOTY())
