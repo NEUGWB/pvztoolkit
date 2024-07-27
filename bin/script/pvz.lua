@@ -1106,9 +1106,6 @@ local function UpdateTimeTask()
                 waveTask[i] = nil
             end
         end
-        if #waveTask == 0 then
-            curTimeTaskWave = curTimeTaskWave + 1
-        end
     end
 end
 
@@ -1134,8 +1131,11 @@ local function Connect(t, f)
     end
 
     local waveTask = connectTimeTask[wave] or {}
+    if not waveTask then
+        waveTask = {}
+        connectTimeTask[wave] = waveTask
+    end
     table.insert(waveTask, {time = time, func = f})
-    connectTimeTask[wave] = waveTask
 end
 
 pvz.At = function(w, t)
