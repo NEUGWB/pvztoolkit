@@ -30,7 +30,7 @@ if NOT "%1" == "debug" (
 )
 
 :server
-cl.exe /LD .\server\server.cpp ws2_32.lib /std:c++20 /EHsc /Febin\server.dll
+cl.exe /LD .\server\server.cpp ws2_32.lib /std:c++20 /EHsc /Feout\server.dll /Fo./out/
 goto :end
 
 :debug

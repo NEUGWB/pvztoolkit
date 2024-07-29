@@ -47,6 +47,6 @@ pvz.NewLevel = function()
     end
 
     pvz.At(20, 250 - 370):Run(function()
-        pvz.Pao(4, 7.625)
+        pvz.Pao(4, 7.5)
     end)
 end

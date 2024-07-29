@@ -121,6 +121,14 @@ IMP = 24 -- 小鬼
 DR_ZOMBOSS = 25 -- 僵博
 GIGA_GARGANTUAR = 32 -- 红眼
 
+local asm_version =
+{
+    [1001] = true,
+    [2001] = true,
+    [2002] = true,
+}
+local use_asm = asm_version[pvz.version]
+
 local cards = {1,2,3,4,5,6,7,8,9,10}
 
 local addr = pvz.addr
@@ -598,14 +606,6 @@ pvz.Check = function(t, p, i)
     return false
 end
 
-local asm_version =
-{
-    [1001] = true,
-    [2001] = true,
-    [2002] = true,
-}
-local use_asm = asm_version[pvz.version]
-
 local initPao = {}
 local recentPao = {}
 
@@ -773,9 +773,13 @@ CollectCoro = function ()
             local x = pvz.ReadMemory("float", {curOffset + addr.item_x})
             local y = pvz.ReadMemory("float", {curOffset + addr.item_y})
             if (x > 0 and y > 70) then
-                pvz.Click(math.floor(x + 20), math.floor(y + 20))
-                pvz.SafeClick()
-                pvz.Delay(8)
+                if use_asm then
+                    pvz.AddOp(6, math.floor(x + 20), math.floor(y + 20), 1)
+                else
+                    pvz.Click(math.floor(x + 20), math.floor(y + 20))
+                    pvz.SafeClick()
+                end
+                pvz.Delay(12)
             end
         end
     end
