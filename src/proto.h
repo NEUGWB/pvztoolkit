@@ -70,15 +70,16 @@ enum class OP_TYPE : uint32_t
     SHOVEL = 3,
     ROCK = 4,
     CHOOSE = 5,
+    Collect = 6,
 };
 
 struct op_t
 {
     OP_TYPE op_type = OP_TYPE::FIRE;
-    uint32_t param1;
-    uint32_t param2;
-    uint32_t param3;
-    uint32_t param4;
+    uint32_t param1 = 0;
+    uint32_t param2 = 0;
+    uint32_t param3 = 0;
+    uint32_t param4 = 0;
 };
 
 struct pvz_mem_t

@@ -19,6 +19,8 @@ uint32_t call_remove_ptr;
 uint32_t call_rock_ptr;
 uint32_t call_choose_ptr;
 
+uint32_t call_mouse_down_ptr;
+
 uint32_t pvz_update_fun;
 
 C2S::pvz_mem_t pvz_mem;
@@ -239,6 +241,42 @@ void ASMRemove(int index)
     }
 }
 
+void ASMMouseDown(int x, int y, int click)
+{
+    uint32_t p1, p2, p3, p4;
+    {
+        p1 = *(uint32_t *)pvz_base_ptr + main_object_ptr;
+        p2 = *(uint32_t *)p1 + 0;
+        p3 = *(uint32_t *)p2 + 0xD8;
+        p4 = *(uint32_t *)p3;
+
+        call_mouse_down_ptr = p4;
+    }
+
+    if (!call_mouse_down_ptr)
+    {
+        return;
+    }
+    uint32_t board = ReadMemory<uint32_t>({pvz_mem.pvz_base, pvz_mem.main_object});
+    printf("asm mouse down %d %d %d\n", x, y, click);
+
+    __asm
+    {
+        pushad
+        push click
+        push y
+        push x
+        mov ecx, board
+        call call_mouse_down_ptr
+        popad
+    }
+}
+
+void ASMSafeClick()
+{
+    ASMMouseDown(60, 50, -1);
+}
+
 void RecvSync()
 {
     if (ClientSocket == INVALID_SOCKET)
@@ -273,6 +311,10 @@ void RecvSync()
         case C2S::OP_TYPE::CHOOSE:
             ASMChoose(op.param1, op.param2);
             break;
+        case C2S::OP_TYPE::Collect:
+            ASMMouseDown(op.param1, op.param2, 1);
+            ASMSafeClick();
+            break;
         }
     }
 }
@@ -302,12 +344,15 @@ void Hook()
     DWORD temp;
     VirtualProtect((void *)0x400000, 0x35E000, PAGE_EXECUTE_READWRITE, &temp);
 
-    uint32_t p1 = pvz_base_ptr;
-    uint32_t p2 = *(uint32_t *)p1 + 0;
-    uint32_t p3 = *(uint32_t *)p2 + 0x20;
-    uint32_t p4 = *(uint32_t *)p3;
+    uint32_t p1, p2, p3, p4;
+    {
+        p1 = pvz_base_ptr;
+        p2 = *(uint32_t *)p1 + 0;
+        p3 = *(uint32_t *)p2 + 0x20;
+        p4 = *(uint32_t *)p3;
 
-    pvz_update_fun = p4;
+        pvz_update_fun = p4;
+    }
 
     char buff[256];
     snprintf(buff, 256, "p4 is 0x%x", pvz_update_fun);

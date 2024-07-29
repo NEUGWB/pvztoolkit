@@ -1,6 +1,6 @@
 local pvz = pvz
-local ZOMBIE = {}
-local PLANT = {}
+local ZOMBIES = {}
+local PLANTS = {}
 
 PEASHOOTER = 0 -- 豌豆射手 
 SUNFLOWER = 1 -- 向日葵    
@@ -120,6 +120,14 @@ GARGANTUAR = 23 -- 白眼
 IMP = 24 -- 小鬼
 DR_ZOMBOSS = 25 -- 僵博
 GIGA_GARGANTUAR = 32 -- 红眼
+
+local asm_version =
+{
+    [1001] = true,
+    [2001] = true,
+    [2002] = true,
+}
+local use_asm = asm_version[pvz.version]
 
 local cards = {1,2,3,4,5,6,7,8,9,10}
 
@@ -569,7 +577,13 @@ pvz.Delay = function(t)
     end
 end
 
-pvz.DelayUntil = function(w, t)
+pvz.UntilGameClock = function(c)
+    while pvz.gameClock < c do
+        coroutine.yield()
+    end
+end
+
+pvz.UntilWaveTime = function(w, t)
     while pvz.NowTime(w) < t do
         coroutine.yield()
     end
@@ -597,14 +611,6 @@ pvz.Check = function(t, p, i)
     end
     return false
 end
-
-local asm_version =
-{
-    [1001] = true,
-    [2001] = true,
-    [2002] = true,
-}
-local use_asm = asm_version[pvz.version]
 
 local initPao = {}
 local recentPao = {}
@@ -750,13 +756,13 @@ pvz.UpdateSpawnInfo = function ()
     pvz.SPAWN_LIST = spawnList
 end
 
-pvz.HasZombie = function (z, n)
+pvz.HasZombie = function (z, w)
     local index = pvz.ZOMBIE[z]
     if not index then return false end
 
     local spawn = pvz.SPAWN_TYPE
-    if n and n > 0 then
-        spawn = pvz.SPAWN_LIST
+    if w and w > 0 then
+        spawn = pvz.SPAWN_LIST[w]
     end
     return spawn[index]
 end
@@ -773,9 +779,13 @@ CollectCoro = function ()
             local x = pvz.ReadMemory("float", {curOffset + addr.item_x})
             local y = pvz.ReadMemory("float", {curOffset + addr.item_y})
             if (x > 0 and y > 70) then
-                pvz.Click(math.floor(x + 20), math.floor(y + 20))
-                pvz.SafeClick()
-                pvz.Delay(8)
+                if use_asm then
+                    pvz.AddOp(6, math.floor(x + 20), math.floor(y + 20), 1)
+                else
+                    pvz.Click(math.floor(x + 20), math.floor(y + 20))
+                    pvz.SafeClick()
+                end
+                pvz.Delay(12)
             end
         end
     end
@@ -819,7 +829,7 @@ pvz.GetPlantIndexByName = function(name)
         name = name:sub(m2 + 1)
     end
 
-    local plantIndex = PLANT[name]
+    local plantIndex = PLANTS[name]
     if m2 then
         plantIndex = -plantIndex
     end
@@ -881,6 +891,7 @@ pvz.GetPlantAt = function(r, c, t)
     end
 end
 
+-- 0主要植物，1南瓜，2南瓜+主要植物，3南瓜+主要植物+莲叶/花盆
 pvz.RemovePlant = function(r, c, t)
     t = t or 0
 
@@ -1002,21 +1013,21 @@ local zombies_string = {
 for i, v in ipairs(seeds_string) do
     local id = i - 1
     for _, name in pairs(v) do
-        PLANT[name] = id
+        PLANTS[name] = id
     end
 end
 
-pvz.PLANT = PLANT
+pvz.PLANTS = PLANTS
 
 
 for i, v in ipairs(zombies_string) do
     local id = i - 1
     for _, name in pairs(v) do
-        ZOMBIE[name] = id
+        ZOMBIES[name] = id
     end
 end
 
-pvz.ZOMBIE = ZOMBIE
+pvz.ZOMBIES = ZOMBIES
 
 pvz.GetZombieName = function(z)
     return zombies_string[z+1][2]
@@ -1110,15 +1121,26 @@ local function UpdateTimeTask()
 end
 
 local function NowTime(wave)
+    local clock = pvz.gameClock
     if not wave then
         wave = pvz.wave
         if wave == 0 then
             wave = 1
         end
+        if waveRefreshTime[wave + 1] then
+            return wave + 1, clock - waveRefreshTime[wave + 1]
+        elseif waveRefreshTime[wave]
+            return wave, clock - waveRefreshTime[wave]
+        else
+            return 0, -math.huge
+        end
     end
 
-    local refreshTime = waveRefreshTime[wave] or 99999999999
-    return pvz.gameClock - refreshTime, wave
+    if waveRefreshTime[wave] then
+        return clock - waveRefreshTime[wave]
+    else
+        return -math.huge
+    end
 end
 
 local function Connect(t, f)
@@ -1150,6 +1172,10 @@ pvz.At = function(w, t)
             self.t = t
             return self
         end,
+        Delay = function(self, d)
+            self.t = self.t + d
+            return self
+        end
     }
     return at
 end
@@ -1157,6 +1183,11 @@ end
 pvz.Now = function()
     local w, t = NowTime()
     return pvz.At(w, t)
+end
+
+pvz.After = function(after)
+    local w, t = NowTime()
+    return pvz.At(w, t + after)
 end
 
 pvz.NowTime = NowTime
