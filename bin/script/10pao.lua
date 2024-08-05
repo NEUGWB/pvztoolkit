@@ -64,9 +64,9 @@ pvz.NewLevel = function()
                     Fire()
                     return
                 end
-                pvz.DelayUntil(w, 120)
+                pvz.UntilWaveTime(w, 120)
                 Dian()
-                pvz.DelayUntil(w, 650 - 373)
+                pvz.UntilWaveTime(w, 650 - 373)
                 Fire()
             end)
         else
