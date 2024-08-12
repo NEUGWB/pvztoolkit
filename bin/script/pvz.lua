@@ -757,7 +757,7 @@ pvz.UpdateSpawnInfo = function ()
 end
 
 pvz.HasZombie = function (z, w)
-    local index = pvz.ZOMBIE[z]
+    local index = pvz.ZOMBIES[z]
     if not index then return false end
 
     local spawn = pvz.SPAWN_TYPE
@@ -1129,7 +1129,7 @@ local function NowTime(wave)
         end
         if waveRefreshTime[wave + 1] then
             return wave + 1, clock - waveRefreshTime[wave + 1]
-        elseif waveRefreshTime[wave]
+        elseif waveRefreshTime[wave] then
             return wave, clock - waveRefreshTime[wave]
         else
             return 0, -math.huge

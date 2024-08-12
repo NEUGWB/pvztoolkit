@@ -311,10 +311,13 @@ void RecvSync()
         case C2S::OP_TYPE::CHOOSE:
             ASMChoose(op.param1, op.param2);
             break;
+<<<<<<< HEAD
         case C2S::OP_TYPE::Collect:
             ASMMouseDown(op.param1, op.param2, 1);
             ASMSafeClick();
             break;
+=======
+>>>>>>> 74b52a3 (choose)
         }
     }
 }

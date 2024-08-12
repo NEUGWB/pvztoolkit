@@ -61,20 +61,21 @@ local function PI()
     pvz.Pao(5,9)
 
     pvz.Delay(373 - 298)
-    pvz.UseCard({"荷叶", "冰", "咖啡豆"}, 4, 9)
+    pvz.UseCard("咖啡豆", 4, 9)
+    pvz.UseCard("咖啡豆", 3, 9)
 end
 
 local function CPI()
     local t = pvz.gameClock
     PI()
 
-    pvz.UntilGameClock(t + 373 - 5)
+    pvz.UntilGameClock(t + 373 - 192)
     pvz.UseCard('小喷菇', 1, 9)
     pvz.UseCard('阳光菇', 2, 9)
     pvz.UseCard('花盆', 5, 9)
     pvz.UseCard('胆小菇', 6, 9)
 
-    pvz.Delay(5)
+    pvz.Delay(60)
     pvz.RemovePlant(1, 9)
     pvz.RemovePlant(2, 9)
     pvz.RemovePlant(5, 9)
@@ -83,6 +84,8 @@ local function CPI()
 end
 
 local function PSD()
+    pvz.Pao(2, 9)
+    pvz.Pao(5, 9)
     pvz.Pao(2, 9)
     pvz.Pao(5, 9)
     pvz.Delay(110)
@@ -94,8 +97,8 @@ end
 
 local function PADD()
     local fireCount = 0
-    for p in PlantFilter() do
-        if p.Type == 47 and p.State == 37 then
+    for p, i in pvz.AlivePlants() do
+        if p.Type == 47 and p.Status == 37 then
             fireCount = fireCount + 1
         end
     end
@@ -103,6 +106,7 @@ local function PADD()
         return false
     end
 
+    fireCount = 5 -- test
     pvz.Pao(5, 9)
     if fireCount >= 6 then
         pvz.Pao(2, 9)
@@ -124,13 +128,15 @@ local logic_wave = 1
 local last_giga_wave = 19
 
 local function RW_NormalWave(w)
+    print('RW_NormalWave', w, logic_wave)
     if logic_wave == 1 then
         pvz.UntilWaveTime(w, 359 - 373)
         PDJW()
         logic_wave = 2
 
-        pvz.UntilGameClock(w, 1050 - 373)
+        pvz.UntilWaveTime(w, 1050 - 373)
         if pvz.NowTime(w + 1) < -9999 then
+            print('jw delay')
             CPI()
             logic_wave = 3
         end
@@ -141,6 +147,7 @@ local function RW_NormalWave(w)
 
         pvz.UntilWaveTime(w, 980 - 373)
         if pvz.NowTime(w + 1) < -9999 then
+            print('pi delay')
             PSD()
             logic_wave = 1
         end
@@ -153,6 +160,7 @@ local function RW_NormalWave(w)
         
         pvz.UntilWaveTime(w, -55)
         PSD()
+        logic_wave = 1
     elseif logic_wave == -1 then
         NR_NormalWave(w)
     end
@@ -160,7 +168,8 @@ end
 
 local function RW_9_19(w)
     RW_NormalWave(w)
-    pvz.UntilWaveTime(w, 1151)
+    --pvz.UntilWaveTime(w, 1151)
+    pvz.Delay(600)
     if pvz.NowTime(w + 1) > -350 then
         return
     end
@@ -178,6 +187,7 @@ local function RW_9_19(w)
 end
 
 local function RW_10_20(w)
+    pvz.UntilWaveTime(w, -55)
     if PADD() then
         logic_wave = 1
         if w == 20 then
@@ -215,7 +225,7 @@ local function PSD_CP(w, lw, d)
         pvz.Pao(r1, 9)
     end)
     pvz.After(110):Run(function()
-        pvz.Pao(r3, 8.75)
+        pvz.Pao(r3 == 2 and 1 or 5, 8.75)
     end)
 
     if d and pvz.HasZombie('舞王') then
@@ -227,11 +237,18 @@ local function PSD_CP(w, lw, d)
                 pvz.UseCard('胆小菇', 5, 9)
                 pvz.UseCard('阳光菇', 6, 9)
             end
+
+            pvz.Delay(60)
+            pvz.RemovePlant(1, 9)
+            pvz.RemovePlant(2, 9)
+            pvz.RemovePlant(5, 9)
+            pvz.RemovePlant(6, 9)
         end)
     end
 end
 
 local function R_NormalWave(w)
+    print('R_NormalWave', w, logic_wave)
     if w == 10 or w == 20 then
         logic_wave = 2
     end
@@ -260,17 +277,20 @@ end
 
 local function Battle()
     if not pvz.HasZombie('红眼') then
+        print('no giga')
         pvz.SelectCards("小喷菇", "模仿小喷菇", "阳光菇", "胆小菇", "向日葵", "双子向日葵", "南瓜头", "寒冰菇", "玉米", "玉米加农炮")
         for w = 1, 20 do
             pvz.At(w, -199):Run(function() NR_NormalWave(w) end)
         end
-    elseif not not pvz.HasZombie('白眼') then
+    elseif not pvz.HasZombie('白眼') then
+        print('only giga')
         pvz.SelectCards("小喷菇", "模仿小喷菇", "阳光菇", "胆小菇", "向日葵", "双子向日葵", "南瓜头", "寒冰菇", "玉米", "玉米加农炮")
         for w = 1, 20 do
             pvz.At(w, -199):Run(function() R_NormalWave(w) end)
         end
     else
-        pvz.SelectCards("小喷菇", "花盆", "阳光菇", "胆小菇", "南瓜头", "咖啡豆", "模仿寒冰菇", "寒冰菇", "玉米", "玉米加农炮")
+        print('giga and garg')
+        pvz.SelectCards("小喷菇", "花盆", "阳光菇", "胆小菇", "南瓜头", "咖啡豆", "模仿寒冰菇", "寒冰菇", "玉米", "樱桃")
         for w = 1, 20 do
             pvz.At(w, -199):Run(function()
                 if w == 10 or w == 20 then
@@ -286,6 +306,7 @@ local function Battle()
 end
 
 local function Start()
+    logic_wave = 1
     pvz.At(1, -599):Run(function()
         if not pvz.HasZombie('红眼') or not pvz.HasZombie('白眼') then
             local sun = pvz.GetPlantAt(3, 9)
@@ -329,11 +350,11 @@ local function Start()
     pvz.At(8, 0):Run(function()
         pvz.UseCard('南瓜头', 3, 9)
         pvz.UseCard('南瓜头', 4, 9)
-    end
+    end)
     pvz.At(18, 0):Run(function()
         pvz.UseCard('南瓜头', 3, 9)
         pvz.UseCard('南瓜头', 4, 9)
-    end
+    end)
 
     pvz.At(20, 250 - 378):Run(function()
         pvz.Pao(4, 7.5)
