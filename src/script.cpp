@@ -312,6 +312,49 @@ int Lua_SetLineup(lua_State *L)
     return 0;
 }
 
+int Lua_SetSpawn(lua_State *L)
+{
+    std::array<bool, 33> zombies = {false};
+    lua_pushvalue(L, 1);
+    for (int i = 0; i < 33; ++i)
+    {
+        lua_rawgeti(L, -1, i);
+        int v = lua_toboolean(L, -1);
+        printf("cpp Set zombies %d %d\n", v, i);
+        zombies[i] = v;
+        lua_pop(L, 1);
+    }
+    lua_pop(L, 1);
+
+    int mode = 0;
+    if (lua_gettop(L) >= 2)
+    {
+        mode = lua_tointeger(L, 2);
+    }
+    switch (mode)
+    {
+    case 0: // 自然
+        zombies[0] = true;
+        g_pvz->InternalSpawn(zombies);
+        break;
+
+    case 1: // 极限
+    default:
+        zombies[0] = true;
+        zombies[1] = true;
+        g_pvz->CustomizeSpawn(zombies, false, false, 1000);
+        break;
+
+    case 2: // 模拟
+        zombies[0] = true;
+        zombies[1] = true;
+        g_pvz->CustomizeSpawn(zombies, false, true, 1000);
+        break;
+    }
+
+    return 0;
+}
+
 void set_lua_api()
 {
     luaL_Reg funcs[] = {{"SystemSleep", Lua_Sleep},
@@ -322,6 +365,7 @@ void set_lua_api()
                         {"AddOp", Lua_AddOp},
                         {"Error", Lua_Error},
                         {"SetLineup", Lua_SetLineup},
+                        {"SetSpawn", Lua_SetSpawn},
 
                         {NULL, NULL}};
     lua_getglobal(g_lua, "pvz");

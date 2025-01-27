@@ -24,6 +24,19 @@ local function ZombieMaxHp2()
     return maxu, maxd
 end
 
+local function KillAlive()
+    local u, d = ZombieMaxHp2()
+    print('ending wave hp', u, d)
+    while u > 0 do
+        u = u - 1800
+        pvz.Pao(2, 8.8)
+    end
+    while d > 0 do
+        d = d - 1800
+        pvz.Pao(5, 8.8)
+    end
+end
+
 --[[
     无红
 ]]
@@ -57,10 +70,11 @@ local function PDJW()
 end
 
 local function PI()
-    pvz.Pao(2,9)
-    pvz.Pao(5,9)
+    pvz.Pao(2,8.75)
+    pvz.Pao(5,8.75)
 
     pvz.Delay(373 - 298)
+    print('pi use ice')
     pvz.UseCard("咖啡豆", 4, 9)
     pvz.UseCard("咖啡豆", 3, 9)
 end
@@ -78,7 +92,7 @@ local function CPI()
     pvz.Delay(60)
     pvz.RemovePlant(1, 9)
     pvz.RemovePlant(2, 9)
-    pvz.RemovePlant(5, 9)
+    pvz.RemovePlant(5, 9, 3)
     pvz.RemovePlant(6, 9)
 
 end
@@ -102,11 +116,12 @@ local function PADD()
             fireCount = fireCount + 1
         end
     end
+    print('PADD', fireCount)
     if fireCount < 5 then
         return false
     end
 
-    fireCount = 5 -- test
+    -- fireCount = 5 -- test
     pvz.Pao(5, 9)
     if fireCount >= 6 then
         pvz.Pao(2, 9)
@@ -169,21 +184,16 @@ end
 local function RW_9_19(w)
     RW_NormalWave(w)
     --pvz.UntilWaveTime(w, 1151)
+    if logic_wave == 3 then
+        pvz.Delay(440)
+        KillAlive()
+    end
     pvz.Delay(600)
     if pvz.NowTime(w + 1) > -350 then
         return
     end
 
-    local u, d = ZombieMaxHp2()
-    print('ending wave hp', u, d)
-    while u > 0 do
-        u = u - 1800
-        pvz.Pao(2, 8.8)
-    end
-    while d > 0 do
-        d = d - 1800
-        pvz.Pao(5, 8.8)
-    end
+    KillAlive()
 end
 
 local function RW_10_20(w)
@@ -198,14 +208,18 @@ local function RW_10_20(w)
             end
         end
     else
-        pvz.UntilWaveTime(w, 400 - 373)
         PI()
         logic_wave = 3
-
         pvz.Delay(520)
         if w == 20 or pvz.NowTime(w + 1) < -9999 then
             PSD()
             logic_wave = 1
+        end
+        if w == 20 then
+            pvz.Delay(600)
+            if ZombieAlive() then
+                KillAlive()
+            end
         end
     end
 end
@@ -222,7 +236,7 @@ local function PSD_CP(w, lw, d)
     pvz.Pao(r3, 9)
     pvz.Pao(r3, 8.8)
     pvz.After(70):Run(function()
-        pvz.Pao(r1, 9)
+        pvz.Pao(r1, 8.75)
     end)
     pvz.After(110):Run(function()
         pvz.Pao(r3 == 2 and 1 or 5, 8.75)
@@ -250,9 +264,9 @@ end
 local function R_NormalWave(w)
     print('R_NormalWave', w, logic_wave)
     if w == 10 or w == 20 then
-        logic_wave = 2
+        logic_wave = 1
     end
-    if logic_wave ~= -1 and w > last_giga_wave + 1 then
+    if logic_wave ~= -1 and w > last_giga_wave + 2 then
         logic_wave = -1
     end
     if logic_wave == -1 and w ~= 20 then
@@ -260,22 +274,26 @@ local function R_NormalWave(w)
         return
     end
 
-    pvz.UntilWaveTime(w, (w == 10 or w == 20) and -55 or -84)
+    pvz.UntilWaveTime(w, (w == 10 or w == 20) and -45 or -84)
     PSD_CP(w, logic_wave, true)
     logic_wave = logic_wave % 2 + 1
 
     pvz.Delay(600)
-    if w == 20 or pvz.NowTime(w + 1) < -9999 then
-        PSD_CP(w, logic_wave, false)
+    if w == 20 or pvz.NowTime(w + 1) < -9999 or w == 9 or w == 19 then
+        --PSD_CP(w, logic_wave, false)
+        KillAlive()
         logic_wave = logic_wave % 2 + 1
     end
 end
 
-local function R_Wave20()
-    pvz.UntilWaveTime(20, -55)
-end
-
 local function Battle()
+    last_giga_wave = 19
+    for w = 10, 19 do
+        if pvz.HasZombie('红眼', w) then
+            last_giga_wave = w
+        end
+    end
+
     if not pvz.HasZombie('红眼') then
         print('no giga')
         pvz.SelectCards("小喷菇", "模仿小喷菇", "阳光菇", "胆小菇", "向日葵", "双子向日葵", "南瓜头", "寒冰菇", "玉米", "玉米加农炮")
@@ -306,7 +324,8 @@ local function Battle()
 end
 
 local function Start()
-    logic_wave = 1
+    logic_wave = 1  -- test, should be 1
+    --pvz.SetSpawnType({'红眼', '白眼', '舞王'}, 1)
     pvz.At(1, -599):Run(function()
         if not pvz.HasZombie('红眼') or not pvz.HasZombie('白眼') then
             local sun = pvz.GetPlantAt(3, 9)

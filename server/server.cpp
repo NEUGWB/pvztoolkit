@@ -78,10 +78,21 @@ template <typename T> T ReadMemory(std::initializer_list<uint32_t> mem)
     uint32_t addr = *mem.begin();
     for (auto i = mem.begin() + 1; i != mem.end(); ++i)
     {
-        addr = *std::bit_cast<uint32_t *>(addr);
+        addr = *(uint32_t *)(addr);
         addr += *i;
     }
     return *(T *)addr;
+}
+
+template <> int ReadMemory(std::initializer_list<uint32_t> mem)
+{
+    uint32_t addr = *mem.begin();
+    for (auto i = mem.begin() + 1; i != mem.end(); ++i)
+    {
+        addr = *(uint32_t *)(addr);
+        addr += *i;
+    }
+    return *(int *)addr;
 }
 
 void SendTick()
@@ -162,7 +173,7 @@ void ASMRock()
         return;
     }
     uint32_t screen = ReadMemory<uint32_t>({pvz_mem.pvz_base, pvz_mem.card_screen});
-    printf("asm rock 0x%p 0x%p\n", pvz_mem.card_screen, call_rock_ptr);
+    printf("asm rock 0x%x 0x%x\n", pvz_mem.card_screen, call_rock_ptr);
 
     if (pvz_mem.main_object == 0x868)
     {
@@ -196,7 +207,7 @@ void ASMChoose(int card, bool imm)
     uint32_t seed = screen + pvz_mem.choose_seed;
     uint32_t seed2 = ReadMemory<uint32_t>({pvz_mem.pvz_base, pvz_mem.card_screen, pvz_mem.choose_seed});
 
-    printf("asm choose %d %d 0x%p 0x%p 0x%p\n", card, imm, seed, seed2, screen);
+    printf("asm choose %d %d 0x%x 0x%x 0x%x\n", card, imm, seed, seed2, screen);
 
     if (!imm)
     {
@@ -258,7 +269,7 @@ void ASMMouseDown(int x, int y, int click)
         return;
     }
     uint32_t board = ReadMemory<uint32_t>({pvz_mem.pvz_base, pvz_mem.main_object});
-    printf("asm mouse down %d %d %d\n", x, y, click);
+    // printf("asm mouse down %d %d %d\n", x, y, click);
 
     __asm
     {
@@ -311,13 +322,10 @@ void RecvSync()
         case C2S::OP_TYPE::CHOOSE:
             ASMChoose(op.param1, op.param2);
             break;
-<<<<<<< HEAD
         case C2S::OP_TYPE::Collect:
             ASMMouseDown(op.param1, op.param2, 1);
             ASMSafeClick();
             break;
-=======
->>>>>>> 74b52a3 (choose)
         }
     }
 }

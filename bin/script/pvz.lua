@@ -625,7 +625,7 @@ local function GetPao()
     end
 
     for i = 0, #initPao - 1 do
-        local cur = (i + lastPao) % #initPao
+        local cur = (i + lastPao + 1) % #initPao
         local index, r, c = table.unpack(initPao[cur + 1])
         local plant = pvz.PlantHead() + index
 
@@ -688,6 +688,7 @@ pvz.Pao = function (r, c, check)
             print("no valid pao")
             break
         end
+        print('pao ', r, c, pao.plant_row, pao.plant_col)
         if use_asm then
             local x, y = pvz.GridToXY(r, c)
             pvz.AddOp(1, x, y, pao.plant_index)
@@ -717,6 +718,18 @@ pvz.Pao = function (r, c, check)
         print("no valid pao", debug.traceback())
         pvz.Error()
     end
+end
+
+pvz.SetSpawnType = function(spawn, mode)
+    local spawnList = {}
+    for i, s in ipairs(spawn) do
+        local zombie = pvz.ZOMBIES[s] or 0
+        spawnList[zombie] = true
+        print("lua set zombies", s, zombie, i)
+    end
+
+    pvz.SetSpawn(spawnList, mode)
+    pvz.SPAWN_TYPE = spawnList
 end
 
 pvz.GetSpawnType = function()
@@ -790,7 +803,7 @@ CollectCoro = function ()
         end
     end
     pvz.Delay(8)
-    CollectCoro()
+    return CollectCoro()
 end
 
 local function FindCard(card)
@@ -1271,6 +1284,29 @@ pvz.SelectCards = function(...)
     end
 end
 
+local hpWarn = false
+function CheckPaoHP() 
+    local plants = pvz.PlantHead()
+    local max = pvz.ReadMemory("int32_t", {pvz_base, main_object, addr.plant_count_max})
+    local alive = function(p)
+        return not p.Squished and not p.Dead
+    end
+    for i = 0, max-1 do
+        local p = plants + i
+        if p.Type == 47 then
+            if not alive(p) then
+                pvz.Error('pao die'..(p.Row+1)..(p.Col+1))
+            end
+            if p.Hp < 298 and not hpWarn then
+                pvz.Error('pao hurt'..(p.Row+1)..(p.Col+1)..' '..p.Hp)
+                hpWarn = true
+            end
+        end
+        pvz.Delay(2)
+    end
+    return CheckPaoHP()
+end
+
 function OnEnterFightState()
     if pvz.Lineup then
         pvz.SetLineup(pvz.Lineup)
@@ -1286,15 +1322,19 @@ function OnEnterFightState()
             end
         end
     end
+    print('OnEnterFightState init pao', #initPao)
 
     if fixPaoHp < 300 and pvz.GetCardIndexByName'玉米' and pvz.GetCardIndexByName'玉米炮' then
         AddTask(FixPao)
     end
+    hpWarn = false
+    AddTask(CheckPaoHP, "paohp")
 end
 
 function OnLeaveFightState()
     ClearTimeTask()
     TaskList = {}
+    print('OnLeaveFightState clear tasks')
 end
 
 function TickGlobal()

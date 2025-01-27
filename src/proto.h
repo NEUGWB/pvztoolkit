@@ -70,10 +70,7 @@ enum class OP_TYPE : uint32_t
     SHOVEL = 3,
     ROCK = 4,
     CHOOSE = 5,
-<<<<<<< HEAD
     Collect = 6,
-=======
->>>>>>> 74b52a3 (choose)
 };
 
 struct op_t
